@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_cliente/core/app_themes.dart';
 
 void main() {
   runApp(const AlphaApp());
@@ -12,6 +13,7 @@ class AlphaApp extends StatelessWidget {
     return MaterialApp(
       title: 'AlphaApp',
       debugShowCheckedModeBanner: false,
+      theme: AppThemes.InicioTheme,
       home: const PaginaInicio(),
     );
   }
