@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
-
+import 'package:gestion_cliente/core/app_themes.dart';
+import 'package:gestion_cliente/screens/inicio_screen.dart';
+import 'package:gestion_cliente/screens/login_screen.dart';
+import 'package:gestion_cliente/screens/register_screen.dart';  
 void main() {
-  runApp(const MyApp());
+  runApp(const AlphaApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AlphaApp extends StatelessWidget {
+  const AlphaApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'AlphaApp',
+      debugShowCheckedModeBanner: false,
+      theme: AppThemes.InicioTheme,
+      home: const PaginaInicio(),
     );
-}
+  }
 }

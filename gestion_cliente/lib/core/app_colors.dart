@@ -1,0 +1,28 @@
+import 'package:flutter/animation.dart';
+
+//Colores para aplicar a las distintas ventanas de la App, se pueden agregar más o modificar los existentes
+
+class AppColors {
+  static const primaryColor = Color(0xFF1565C0);   
+  static const secondaryColor = Color(0xFF42A5F5);
+  static const backgroundColor = Color.fromARGB(255, 205, 230, 250);  
+
+  static const primaryColor2 = Color.fromARGB(255, 85, 217, 231);
+  static const secondaryColor2 = Color(0xFF4DD0E1);
+  static const backgroundColor2 = Color.fromARGB(255, 215, 243, 247);
+
+  static const primaryColor3 = Color(0xFF00B32D);
+  static const secondaryColor3 = Color(0xFF0ADA03);
+  static const backgroundColor3 = Color.fromARGB(255, 206, 255, 243);
+
+  static const primaryColor4 = Color(0xFF8E24AA);
+  static const secondaryColor4 = Color(0xFFBA68C8);
+  static const backgroundColor4 = Color.fromARGB(255, 246, 214, 252);
+
+  static const primaryColor5 = Color(0xFFC62828);
+  static const secondaryColor5 = Color(0xFFEF5350);
+  static const backgroundColor5 = Color.fromARGB(255, 255, 207, 213);
+
+  
+}
+
