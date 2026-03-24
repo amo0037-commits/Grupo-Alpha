@@ -10,16 +10,16 @@ class PaginaInicio extends StatelessWidget {
       appBar: AppBar(
         toolbarHeight: 100,
         title: SizedBox(
-          height: 65,
+          height: 120,
           child: Image.asset(
-            'assets/images/LogoAlphaAppPagInicio.png',
+            'assets/images/Icono_AlphaApp.png',
             height: 65,
             fit: BoxFit.contain,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, size: 30, color: Color(0xFF1565C0)),
+            icon: const Icon(Icons.person, size: 45, color: Color(0xFF1565C0)),
             onPressed: () {
               Navigator.push(
                 context,
