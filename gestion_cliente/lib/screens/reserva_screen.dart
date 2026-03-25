@@ -59,6 +59,26 @@ class _ReservaPageState extends State<ReservaPage> {
                 });
               },
             ),
+            
+            const SizedBox(height: 20),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Nombre y apellidos',
+                border: OutlineInputBorder(),
+                 ),
+                 ),
+                 const SizedBox(height: 20),
+
+                 const SizedBox(height: 20),
+            
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'direccion',
+                border: OutlineInputBorder(),
+                 ),
+                 ),
+                 const SizedBox(height: 20),
+
              const SizedBox(height: 20),
             TextField(
               decoration: const InputDecoration(
