@@ -6,7 +6,7 @@ class AppThemes {
 
   //Tema de la pantalla de inicio.
 
-    static final InicioTheme = ThemeData(
+    static final inicioTheme = ThemeData(
     primaryColor: AppColors.primaryColor,
     scaffoldBackgroundColor: AppColors.backgroundColor,
     appBarTheme: const AppBarTheme(
@@ -28,7 +28,7 @@ class AppThemes {
 
    //Tema Azul claro.
 
-    static final AzulClaroTheme = ThemeData(
+    static final azulClaroTheme = ThemeData(
     primaryColor: AppColors.primaryColor2,
     scaffoldBackgroundColor: AppColors.backgroundColor2,
     appBarTheme: const AppBarTheme(
@@ -50,7 +50,7 @@ class AppThemes {
 
    //Tema Verde.
 
-    static final VerdeTheme = ThemeData(
+    static final verdeTheme = ThemeData(
     primaryColor: AppColors.primaryColor3,
     scaffoldBackgroundColor: AppColors.backgroundColor3,
     appBarTheme: const AppBarTheme(
@@ -72,7 +72,7 @@ class AppThemes {
 
    //Tema Morado/Rosa.
 
-    static final MoradoTheme = ThemeData(
+    static final moradoTheme = ThemeData(
     primaryColor: AppColors.primaryColor4,
     scaffoldBackgroundColor: AppColors.backgroundColor4,
     appBarTheme: const AppBarTheme(
@@ -94,7 +94,7 @@ class AppThemes {
 
    //Tema Rojo.
    
-    static final RojoTheme = ThemeData(
+    static final rojoTheme = ThemeData(
     primaryColor: AppColors.primaryColor5,
     scaffoldBackgroundColor: AppColors.backgroundColor5,
     appBarTheme: const AppBarTheme(
