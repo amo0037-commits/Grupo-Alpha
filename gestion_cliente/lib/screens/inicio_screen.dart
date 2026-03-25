@@ -7,7 +7,8 @@ class PaginaInicio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double sizeIcono = MediaQuery.of(context).size.width * 0.08; // Tamaño de los iconos en el AppBar
+    //Variable para el tamaño de los iconos en el AppBar
+    double sizeIcono = MediaQuery.of(context).size.width *0.08;
     return Scaffold(
       appBar: AppBar(
         titleSpacing:
@@ -26,7 +27,7 @@ class PaginaInicio extends StatelessWidget {
 
         actions: [
           IconButton(
-            icon:  Icon(Icons.person, size: sizeIcono, color: Color(0xFF1565C0)),
+            icon: Icon(Icons.person, size: sizeIcono, color: Color(0xFF1565C0)),
             onPressed: () {
               Navigator.push(
                 context,
@@ -35,18 +36,18 @@ class PaginaInicio extends StatelessWidget {
             },
           ),
           IconButton(
-            icon:  Icon(Icons.search, size: sizeIcono, color: Color(0xFF1565C0),),
+            icon: Icon(Icons.search, size: sizeIcono, color: Color(0xFF1565C0)),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ReservaPage()),
-                );
+              );
             },
           ),
         ],
       ),
 
-// SinglechildScrollView para permitir scroll en caso de pantallas pequeñas.
+      // SinglechildScrollView para permitir scroll en caso de pantallas pequeñas.
       body: SingleChildScrollView(
         child: Center(
           /* Se ha quitado el antiguo Container y su  height: MediaQuery.of(context).size.height - 100, porque 
