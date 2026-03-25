@@ -8,19 +8,21 @@ class PaginaInicio extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 0, // Elimina el espacio predeterminado a la izquierda del título
+        titleSpacing:
+            0, // Elimina el espacio predeterminado a la izquierda del título
         centerTitle: false, // Alinea el título a la izquierda
-        toolbarHeight: 100, // Aumenta la altura del AppBar para acomodar el logo
+        toolbarHeight:
+            100, // Aumenta la altura del AppBar para acomodar el logo
         title: SizedBox(
-          height: 120, 
+          height: 80,
           child: Image.asset(
             'assets/images/Icono_AlphaApp.png',
-            height: 65,
-            alignment: Alignment.topLeft, //Se posiciona el logo en la parte superior izquierda del AppBar
-            fit: BoxFit.contain, 
+            alignment: Alignment
+                .topLeft, //Se posiciona el logo en la parte superior izquierda del AppBar
+            fit: BoxFit.contain,
           ),
         ),
-       
+
         actions: [
           IconButton(
             icon: const Icon(Icons.person, size: 45, color: Color(0xFF1565C0)),
@@ -33,32 +35,47 @@ class PaginaInicio extends StatelessWidget {
           ),
         ],
       ),
-      
+
+// SinglechildScrollView para permitir scroll en caso de pantallas pequeñas.
       body: SingleChildScrollView(
         child: Center(
-          child: Container(
-            height: MediaQuery.of(context).size.height - 100, // Ajusta la altura del contenedor    
-           padding: const EdgeInsets.all(16.0),
+          /* Se ha quitado el antiguo Container y su  height: MediaQuery.of(context).size.height - 100, porque 
+          forzaba a la pantalla a tener una altura fija, lo que causaba overflow en pantallas pequeñas.
+           Ahora el contenido se adapta al tamaño disponible, y el SingleChildScrollView permite hacer scroll 
+           si es necesario.
+          */
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Alinea el contenido al final del contenedor
-           
-              children: [
-                const SizedBox(height: 60), // Mover el contenido hacia abajo para dejar espacio al logo en el AppBar
+              mainAxisAlignment: MainAxisAlignment
+                  .center, // Alinea el contenido al final del contenedor
 
-                Image.asset('assets/images/LogoAlphaAppPagInicio.png', 
-               width: 800, 
-             
-               fit: BoxFit.contain,
-               ),
-               const SizedBox(height: 60),
-              
-              
-               const Text('Bienvenido a AlphaApp', style: TextStyle(fontSize: 28, 
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 14, 76, 146))
+              children: [
+                const SizedBox(
+                  height: 60,
+                ), // Mover el contenido hacia abajo para dejar espacio al logo en el AppBar
+
+                Image.asset(
+                  'assets/images/LogoAlphaAppPagInicio.png',
+                  /* se ha cambiado el width de 800 a esto porque puede dar problemas con moviles, con este
+                   codigo calcula el ancho de la pantalla y lo multiplica por 0,8 (80%), haciendo que ocupe el 80%
+                   de la pantalla evitando desbordamientos en telefonos con pantallas pequeñas  */
+                  width: MediaQuery.of(context).size.width * 0.8,
+
+                  fit: BoxFit.contain,
                 ),
-               const SizedBox(height: 20),
-                
+                const SizedBox(height: 60),
+
+                const Text(
+                  'Bienvenido a AlphaApp',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 14, 76, 146),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
                 const Text(
                   'La app para gestionar tu negocio de forma fiable',
                   style: TextStyle(fontSize: 20, color: Color(0xFF448AFF)),
