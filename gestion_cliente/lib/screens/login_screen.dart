@@ -20,7 +20,9 @@ class LoginPage extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 700.0),
+        padding: EdgeInsets.symmetric(
+        horizontal: MediaQuery.of(context).size.width * 0.1,
+        ),
         child: Column(
           children: [
             const SizedBox(height: 40),

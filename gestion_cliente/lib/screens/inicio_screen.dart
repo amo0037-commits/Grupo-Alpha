@@ -34,7 +34,7 @@ class PaginaInicio extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.person_search, size: 30, color: Color(0xFF1565C0),),
+            icon: const Icon(Icons.person_search, size: 45, color: Color(0xFF1565C0),),
             onPressed: () {
               Navigator.push(
                 context,
