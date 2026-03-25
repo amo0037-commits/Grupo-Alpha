@@ -33,8 +33,8 @@ class _ReservaPageState extends State<ReservaPage> {
           style: TextStyle(color: Color(0xFF1565C0)),
         ),
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 700.0),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.10),
         child: Column(
         children: [
           const SizedBox(height:40),
