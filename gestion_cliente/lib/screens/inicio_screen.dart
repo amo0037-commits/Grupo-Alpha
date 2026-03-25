@@ -7,6 +7,7 @@ class PaginaInicio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double sizeIcono = MediaQuery.of(context).size.width * 0.08; // Tamaño de los iconos en el AppBar
     return Scaffold(
       appBar: AppBar(
         titleSpacing:
@@ -25,7 +26,7 @@ class PaginaInicio extends StatelessWidget {
 
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, size: 45, color: Color(0xFF1565C0)),
+            icon:  Icon(Icons.person, size: sizeIcono, color: Color(0xFF1565C0)),
             onPressed: () {
               Navigator.push(
                 context,
@@ -34,7 +35,7 @@ class PaginaInicio extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.person_search, size: 30, color: Color(0xFF1565C0),),
+            icon:  Icon(Icons.search, size: sizeIcono, color: Color(0xFF1565C0),),
             onPressed: () {
               Navigator.push(
                 context,
