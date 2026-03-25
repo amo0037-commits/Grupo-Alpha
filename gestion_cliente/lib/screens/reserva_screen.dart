@@ -79,6 +79,14 @@ class _ReservaPageState extends State<ReservaPage> {
                  ),
                  const SizedBox(height: 20),
 
+                  TextField(
+              decoration: const InputDecoration(
+                labelText: 'telefono',
+                border: OutlineInputBorder(),
+                 ),
+                 ),
+                 const SizedBox(height: 20),
+
              const SizedBox(height: 20),
             TextField(
               decoration: const InputDecoration(
