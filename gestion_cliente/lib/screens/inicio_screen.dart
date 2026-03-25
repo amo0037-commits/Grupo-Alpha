@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
+import 'package:gestion_cliente/screens/reserva_screen.dart';
 
 class PaginaInicio extends StatelessWidget {
   const PaginaInicio({super.key});
@@ -16,9 +17,8 @@ class PaginaInicio extends StatelessWidget {
         title: SizedBox(
           height: 80,
           child: Image.asset(
-            'assets/images/Icono_AlphaApp.png',
-            alignment: Alignment
-                .topLeft, //Se posiciona el logo en la parte superior izquierda del AppBar
+            'assets/images/LogoAlphaAppPagInicio.png',
+            height: 165,
             fit: BoxFit.contain,
           ),
         ),
@@ -31,6 +31,15 @@ class PaginaInicio extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (context) => const LoginPage()),
               );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_search, size: 30, color: Color(0xFF1565C0),),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ReservaPage()),
+                );
             },
           ),
         ],
