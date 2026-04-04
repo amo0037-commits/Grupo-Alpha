@@ -3,32 +3,72 @@ import 'package:gestion_cliente/core/app_colors.dart';
 
 // Temas aplicables a las distintas ventanas de la app y a sus respectivos elementos.
 class AppThemes {
-
   //Tema de la pantalla de inicio.
 
-    static final inicioTheme = ThemeData(
+  static final inicioTheme = ThemeData(
     primaryColor: AppColors.primaryColor,
     scaffoldBackgroundColor: AppColors.backgroundColor,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.backgroundColor,
+    appBarTheme: AppBarTheme(
+      backgroundColor: AppColors.primaryColor,
       foregroundColor: Colors.white,
-    ),
+      iconTheme: const IconThemeData(color: Colors.white),
+      titleTextStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+      actionsIconTheme: const IconThemeData(color: AppColors.secondaryColor),
+     
+
+        ),
+
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primaryColor,
       primary: AppColors.primaryColor,
       secondary: AppColors.secondaryColor,
+      surface: Colors.white,
+      onPrimary: Colors.white
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primaryColor,
+        backgroundColor: const Color(0xFF656666),
         foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    textTheme: const TextTheme(
+      titleLarge: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF212121), 
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.secondaryColor,
+        side: BorderSide(color: AppColors.secondaryColor),
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color:AppColors.primaryColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: AppColors.primaryColor),
       ),
     ),
   );
 
-   //Tema Azul claro.
 
-    static final azulClaroTheme = ThemeData(
+  /* lo dejo comentado, de momento sin uso real hasta no tener listo el principal.
+
+
+  //Tema Azul claro.
+   static final azulClaroTheme = ThemeData(
     primaryColor: AppColors.primaryColor2,
     scaffoldBackgroundColor: AppColors.backgroundColor2,
     appBarTheme: const AppBarTheme(
@@ -48,9 +88,9 @@ class AppThemes {
     ),
   );
 
-   //Tema Verde.
+  //Tema Verde.
 
-    static final verdeTheme = ThemeData(
+  static final verdeTheme = ThemeData(
     primaryColor: AppColors.primaryColor3,
     scaffoldBackgroundColor: AppColors.backgroundColor3,
     appBarTheme: const AppBarTheme(
@@ -70,9 +110,9 @@ class AppThemes {
     ),
   );
 
-   //Tema Morado/Rosa.
+  //Tema Morado/Rosa.
 
-    static final moradoTheme = ThemeData(
+  static final moradoTheme = ThemeData(
     primaryColor: AppColors.primaryColor4,
     scaffoldBackgroundColor: AppColors.backgroundColor4,
     appBarTheme: const AppBarTheme(
@@ -92,9 +132,9 @@ class AppThemes {
     ),
   );
 
-   //Tema Rojo.
-   
-    static final rojoTheme = ThemeData(
+  //Tema Rojo.
+
+  static final rojoTheme = ThemeData(
     primaryColor: AppColors.primaryColor5,
     scaffoldBackgroundColor: AppColors.backgroundColor5,
     appBarTheme: const AppBarTheme(
@@ -113,4 +153,5 @@ class AppThemes {
       ),
     ),
   );
+  */
 }
