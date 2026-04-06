@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gestion_cliente/core/app_colors.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
+import 'package:gestion_cliente/screens/services_screen.dart';
 
 class PaginaInicio extends StatelessWidget {
   const PaginaInicio({super.key});
@@ -61,7 +62,16 @@ class PaginaInicio extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => const ReservaPage()),
                 );
               },
-            ),
+            ),  
+             IconButton(
+              icon: Icon(Icons.info, size: sizeIcono),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ServicePage()),
+                );
+              },
+            ),  
           ],
         ),
 
