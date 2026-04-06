@@ -38,14 +38,11 @@ class ServicePage extends StatelessWidget {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment
-                    .center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
 
                 children: [
-                  const SizedBox(
-                    height: 60,
-                  ),
+                  const SizedBox(height: 60),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -57,15 +54,33 @@ class ServicePage extends StatelessWidget {
                   ),
                 ],
               ),
-                  const SizedBox(height: 20),
+                  const SizedBox(width: 15),
 
                   const Text(
-                    'Servicio de Peluqueria',
+                    'Peluqueria',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 60),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                  Image.asset(
+                    'assets/images/clinicafisioinfo.png',
+                    width: MediaQuery.of(context).size.width * 0.2,
+                    fit: BoxFit.contain,
+                  ),
                 ],
               ),
+                  const SizedBox(width: 15),
+
+                  const Text(
+                    'Clinica de fisioterapia',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 60),
+                ]
+                                  
+             ),
             ),
           ),
         ),

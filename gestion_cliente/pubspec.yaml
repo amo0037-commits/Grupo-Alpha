@@ -61,6 +61,7 @@ flutter:
     - assets/images/LogoAlphaAppPagInicio.png
     - assets/images/Icono_AlphaApp.png
     - assets/images/peluqueriainfo.png
+    - assets/images/clinicafisioinfo.png
 
     
   # To add assets to your application, add an assets section, like this:
