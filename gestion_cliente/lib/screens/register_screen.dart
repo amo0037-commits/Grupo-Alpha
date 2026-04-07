@@ -1,8 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_cliente/core/app_colors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class RegisterPage extends StatelessWidget {
+
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
+  Future<void> register() async {
+  if (passwordController.text != confirmPasswordController.text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Las contraseñas no coinciden')),
+    );
+    return;
+  }
+
+  try {
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Usuario creado correctamente')),
+    );
+
+    Navigator.pop(context);
+
+  } on FirebaseAuthException catch (e) {
+    String mensaje = 'Error';
+
+    if (e.code == 'email-already-in-use') {
+      mensaje = 'El email ya está en uso';
+    } else if (e.code == 'weak-password') {
+      mensaje = 'La contraseña es muy débil';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +77,17 @@ class RegisterPage extends StatelessWidget {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF9CA3AF),Color(0xFF4B5563) ],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 700.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                   border: OutlineInputBorder(),
               ),
             ),
           ),
@@ -42,6 +101,16 @@ class RegisterPage extends StatelessWidget {
               right: MediaQuery.of(context).size.width * 0.10,
               //esto hace que el teclado no tape  contenido,  se ajusta segun el tamaño del teclado
               bottom: MediaQuery.of(context).viewInsets.bottom,
+
+            const SizedBox(height: 20),
+
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Contraseña',
+                border: OutlineInputBorder(),
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -103,6 +172,24 @@ class RegisterPage extends StatelessWidget {
               ],
             ),
           ),
+          TextField(
+            controller: confirmPasswordController,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Confirmar contraseña',
+              border: OutlineInputBorder(),
+            ),
+          ),
+
+
+
+            const SizedBox(height: 30),
+
+          ElevatedButton(
+            onPressed: register,
+            child: const Text('Registrarse'),
+          ),
+          ],
         ),
       ),
     );
