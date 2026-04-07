@@ -124,13 +124,13 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const SizedBox(height: 40),
 
-                // Email animado
-                AnimatedTextField(label: 'Email'),
+                // Email animado con controlador
+                AnimatedTextField(label: 'Email', controller: emailController),
 
                 const SizedBox(height: 20),
 
-                // Contraseña animada
-                AnimatedTextField(label: 'Contraseña', obscureText: true),
+                // Contraseña animada con controlador
+                AnimatedTextField(label: 'Contraseña', obscureText: true, controller: passwordController),
 
                 const SizedBox(height: 20),
 
@@ -145,9 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ElevatedButton(
-                        onPressed: () {
-                          // lógica login
-                        },
+                        onPressed: login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
@@ -190,8 +188,14 @@ class _LoginPageState extends State<LoginPage> {
 class AnimatedTextField extends StatefulWidget {
   final String label;
   final bool obscureText;
+  final TextEditingController controller;
 
-  const AnimatedTextField({required this.label, this.obscureText = false, super.key});
+  const AnimatedTextField({
+    required this.label,
+    this.obscureText = false,
+     required this.controller,
+    super.key,
+    });
 
   @override
   State<AnimatedTextField> createState() => _AnimatedTextFieldState();
@@ -226,6 +230,7 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
             ),
           ),
           child: TextField(
+            controller: widget.controller,
             focusNode: _focusNode,
             obscureText: widget.obscureText,
             decoration: InputDecoration(
