@@ -1,8 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gestion_cliente/core/app_colors.dart';
 import 'register_screen.dart';
+import 'package:gestion_cliente/screens/dashboard_page.dart';
+import 'package:gestion_cliente/screens/admin_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  bool loading = false;
+
+  Future<void> login() async {
+    setState(() => loading = true);
+
+    try {
+      // 🔐 Firebase Auth
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      final uid = userCredential.user!.uid;
+
+      // 📦 Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      if (!userDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario no encontrado en Firestore')),
+        );
+        setState(() => loading = false);
+        return;
+      }
+
+      final data = userDoc.data() as Map<String, dynamic>;
+      final rol = data['rol'] ?? 'usuario';
+      final negocios = List<String>.from(data['negocios'] ?? []);
+
+      setState(() => loading = false);
+
+      // 🚀 Navegación
+      if (rol == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminPage()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DashboardPage(negocios: negocios),
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String mensaje = 'Error al iniciar sesión';
+
+      if (e.code == 'user-not-found') mensaje = 'Usuario no encontrado';
+      if (e.code == 'wrong-password') mensaje = 'Contraseña incorrecta';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensaje)),
+      );
+
+      setState(() => loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +89,10 @@ class LoginPage extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+          colors: [
+            Color(0xFFE0E3E7),
+            Color(0xFF64B5F6),
+          ],
         ),
       ),
       child: Scaffold(
@@ -21,9 +100,7 @@ class LoginPage extends StatelessWidget {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
           ),
           title: const Text('Iniciar sesión'),
           backgroundColor: Colors.transparent,
@@ -47,13 +124,13 @@ class LoginPage extends StatelessWidget {
               children: [
                 const SizedBox(height: 40),
 
-                // Email animado
-                AnimatedTextField(label: 'Email'),
+                // Email animado con controlador
+                AnimatedTextField(label: 'Email', controller: emailController),
 
                 const SizedBox(height: 20),
 
-                // Contraseña animada
-                AnimatedTextField(label: 'Contraseña', obscureText: true),
+                // Contraseña animada con controlador
+                AnimatedTextField(label: 'Contraseña', obscureText: true, controller: passwordController),
 
                 const SizedBox(height: 20),
 
@@ -68,9 +145,7 @@ class LoginPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ElevatedButton(
-                        onPressed: () {
-                          // lógica login
-                        },
+                        onPressed: login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
@@ -92,7 +167,7 @@ class LoginPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RegisterPage(),
+                        builder: (_) => const RegisterPage(),
                       ),
                     );
                   },
@@ -113,8 +188,14 @@ class LoginPage extends StatelessWidget {
 class AnimatedTextField extends StatefulWidget {
   final String label;
   final bool obscureText;
+  final TextEditingController controller;
 
-  const AnimatedTextField({required this.label, this.obscureText = false, super.key});
+  const AnimatedTextField({
+    required this.label,
+    this.obscureText = false,
+     required this.controller,
+    super.key,
+    });
 
   @override
   State<AnimatedTextField> createState() => _AnimatedTextFieldState();
@@ -149,6 +230,7 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
             ),
           ),
           child: TextField(
+            controller: widget.controller,
             focusNode: _focusNode,
             obscureText: widget.obscureText,
             decoration: InputDecoration(
