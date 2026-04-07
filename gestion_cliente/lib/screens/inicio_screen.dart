@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:gestion_cliente/screens/auth/login_screen.dart';
+import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/core/app_colors.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
