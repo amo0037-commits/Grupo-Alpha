@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:gestion_cliente/core/app_colors.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
@@ -10,7 +13,7 @@ class PaginaInicio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //Variable para el tamaño de los iconos en el AppBar
-    double sizeIcono = MediaQuery.of(context).size.width * 0.08;
+    double sizeIcono = min(MediaQuery.of(context).size.width * 0.07, 70);
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -39,7 +42,7 @@ class PaginaInicio extends StatelessWidget {
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF),Color(0xFF4B5563) ],
+                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
               ),
             ),
           ),
@@ -86,13 +89,10 @@ class PaginaInicio extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment
-                    .center, // Alinea el contenido al final del contenedor
+                mainAxisAlignment: MainAxisAlignment.center,
 
                 children: [
-                  const SizedBox(
-                    height: 60,
-                  ), // Mover el contenido hacia abajo para dejar espacio al logo en el AppBar
+                  const SizedBox(height: 60),
 
                   Image.asset(
                     'assets/images/LogoAlphaAppPagInicio.png',
@@ -105,15 +105,57 @@ class PaginaInicio extends StatelessWidget {
                   ),
                   const SizedBox(height: 60),
 
-                  const Text(
-                    'Bienvenido a AlphaApp',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        color: Color(0xFF4B5563).withAlpha(40),
+                        
+                        child: ShaderMask(
+                          shaderCallback: (rect) {
+                            return LinearGradient(
+                              colors: [  Color(0xFF0D47A1), Color(0xFF1565C0) ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(
+                              Rect.fromLTWH(0, 0, rect.width, rect.height),
+                            );
+                          },
+                          blendMode: BlendMode.srcIn,
+                          child: const Text(
+                            'Bienvenido a AlphaApp',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+
                   const SizedBox(height: 20),
 
                   const Text(
                     'La app para gestionar tu negocio de forma fiable',
-                    style: TextStyle(fontSize: 20),
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Color(0xFF0D47A1),
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                          color: Colors.black12,
+                        ),
+                      ],
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
