@@ -1,19 +1,63 @@
 import 'dart:math';
 import 'dart:ui';
-
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/core/app_colors.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
+import 'package:gestion_cliente/screens/services_screen.dart';
 
-class PaginaInicio extends StatelessWidget {
+class PaginaInicio extends StatefulWidget {
   const PaginaInicio({super.key});
+
+  @override
+  State<PaginaInicio> createState() => _PaginaInicioState();
+}
+
+class _PaginaInicioState extends State<PaginaInicio>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _logoController;
+  late Animation<double> _logoAnim;
+
+  bool _showText = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      setState(() {
+        _showText = true;
+      });
+    });
+
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    _logoAnim = Tween<double>(
+      begin: 0.95,
+      end: 1.05,
+    ).chain(CurveTween(curve: Curves.easeInOut)).animate(_logoController);
+
+    _logoController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _logoController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     //Variable para el tamaño de los iconos en el AppBar
-    double sizeIcono = min(MediaQuery.of(context).size.width * 0.07, 70);
+    double sizeIcono = min(
+      max(MediaQuery.of(context).size.width * 0.07, 24),
+      50,
+    );
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -65,94 +109,117 @@ class PaginaInicio extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => const ReservaPage()),
                 );
               },
-            ),
+            ),  
+             IconButton(
+              icon: Icon(Icons.info, size: sizeIcono),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ServicePage()),
+                );
+              },
+            ),  
           ],
         ),
 
         // SinglechildScrollView para permitir scroll en caso de pantallas pequeñas.
-        body: SingleChildScrollView(
-          child: Center(
-            /* Se ha quitado el antiguo Container y su  height: MediaQuery.of(context).size.height - 100, porque 
-            forzaba a la pantalla a tener una altura fija, lo que causaba overflow en pantallas pequeñas.
-             Ahora el contenido se adapta al tamaño disponible, y el SingleChildScrollView permite hacer scroll 
-             si es necesario.
-            */
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            double screenHeight = constraints.maxHeight;
+            double screenWidth = constraints.maxWidth;
 
-                children: [
-                  const SizedBox(height: 60),
+            double logoSize = screenWidth < 600
+                ? screenWidth *
+                      0.9 // Telefono ocupa mas
+                : min(screenWidth * 0.5, 750); // PC: máximo 750px
 
-                  Image.asset(
-                    'assets/images/LogoAlphaAppPagInicio.png',
-                    /* se ha cambiado el width de 800 a esto porque puede dar problemas con moviles, con este
-                     codigo calcula el ancho de la pantalla y lo multiplica por 0,8 (80%), haciendo que ocupe el 80%
-                     de la pantalla evitando desbordamientos en telefonos con pantallas pequeñas  */
-                    width: MediaQuery.of(context).size.width * 0.8,
+            double textFontSize = screenWidth < 600
+                ? 24.0 // móvil
+                : min(screenHeight * 0.05, 48); // PC
+            double spacing = screenHeight * 0.05;
 
-                    fit: BoxFit.contain,
+            return SingleChildScrollView(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: screenHeight * 0.05,
                   ),
-                  const SizedBox(height: 60),
-
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Logo animado
+                      AnimatedBuilder(
+                        animation: _logoAnim,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _logoAnim.value,
+                            child: child,
+                          );
+                        },
+                        child: Image.asset(
+                          'assets/images/LogoAlphaAppPagInicio.png',
+                          width: logoSize,
+                          fit: BoxFit.contain,
                         ),
-                        color: Color(0xFF4B5563).withAlpha(40),
-                        
-                        child: ShaderMask(
-                          shaderCallback: (rect) {
-                            return LinearGradient(
-                              colors: [  Color(0xFF0D47A1), Color(0xFF1565C0) ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(
-                              Rect.fromLTWH(0, 0, rect.width, rect.height),
-                            );
-                          },
-                          blendMode: BlendMode.srcIn,
-                          child: const Text(
-                            'Bienvenido a AlphaApp',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                      ),
+
+                      SizedBox(height: screenHeight * 0.2),
+
+                      // Texto animado con fondo difuminado
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.05,
+                              vertical: screenHeight * 0.02,
                             ),
-                            textAlign: TextAlign.center,
+                            color: Color(0xFF4B5563).withAlpha(40),
+                            child: SizedBox(
+                              width: min(
+                                screenWidth * 0.6,
+                                600,
+                              ), // ancho máximo para PC
+                              child: DefaultTextStyle(
+                                style: TextStyle(
+                                  fontSize: textFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                child: AnimatedTextKit(
+                                  animatedTexts: [
+                                    ColorizeAnimatedText(
+                                      'Bienvenido a AlphaApp',
+                                      textAlign: TextAlign.center,
+                                      textStyle: TextStyle(
+                                        fontSize: textFontSize,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Roboto',
+                                      ),
+                                      colors: [
+                                        Color(0xFF0D47A1),
+                                        Color(0xFF1565C0),
+                                        Color(0xFF64B5F6),
+                                        Color(0xFF9CA3AF),
+                                      ],
+                                      speed: Duration(milliseconds: 400),
+                                    ),
+                                  ],
+                                  repeatForever: true,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    'La app para gestionar tu negocio de forma fiable',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Color(0xFF0D47A1),
-                      shadows: [
-                        Shadow(
-                          offset: Offset(1, 1),
-                          blurRadius: 2,
-                          color: Colors.black12,
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

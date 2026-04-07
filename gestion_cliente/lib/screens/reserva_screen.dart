@@ -56,6 +56,12 @@ class _ReservaPageState extends State<ReservaPage> {
             children: [
               const SizedBox(height: 40),
 
+                   const Text(
+                    'Ofrecemos una gama variada de servicios',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
                   labelText: 'Selecciona un servicio',
