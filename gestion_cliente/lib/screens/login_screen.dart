@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_cliente/core/app_colors.dart';
 import 'register_screen.dart';
 
 class LoginPage extends StatelessWidget {
@@ -7,6 +6,8 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -29,18 +30,16 @@ class LoginPage extends StatelessWidget {
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF),Color(0xFF4B5563) ],
+                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
               ),
             ),
           ),
         ),
-        // con esto desplazamos el contenido haciendo scroll si se fuera a tapar
         body: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.only(
-              left: MediaQuery.of(context).size.width * 0.10,
-              right: MediaQuery.of(context).size.width * 0.10,
-              //esto hace que el teclado no tape  contenido, se ajusta segun el tamaño del teclado
+              left: screenWidth * 0.10,
+              right: screenWidth * 0.10,
               bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: Column(
@@ -48,46 +47,41 @@ class LoginPage extends StatelessWidget {
               children: [
                 const SizedBox(height: 40),
 
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
+                // Email animado
+                AnimatedTextField(label: 'Email'),
 
                 const SizedBox(height: 20),
 
-                TextField(
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Contraseña',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
+                // Contraseña animada
+                AnimatedTextField(label: 'Contraseña', obscureText: true),
 
                 const SizedBox(height: 20),
 
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF4B5563), Color(0xFF9CA3AF)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // lógica login
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400, minWidth: 200),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4B5563), Color(0xFF9CA3AF)],
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // lógica login
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Iniciar sesión'),
+                      ),
                     ),
-                    child: const Text('Iniciar sesión'),
                   ),
                 ),
 
@@ -105,6 +99,62 @@ class LoginPage extends StatelessWidget {
                   child: const Text('¿No tienes cuenta? Regístrate'),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------
+// Widget animado para TextField
+// -----------------------
+class AnimatedTextField extends StatefulWidget {
+  final String label;
+  final bool obscureText;
+
+  const AnimatedTextField({required this.label, this.obscureText = false, super.key});
+
+  @override
+  State<AnimatedTextField> createState() => _AnimatedTextFieldState();
+}
+
+class _AnimatedTextFieldState extends State<AnimatedTextField> {
+  final FocusNode _focusNode = FocusNode();
+  bool _hasFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() {
+        _hasFocus = _focusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400, minWidth: 200),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _hasFocus ? Colors.blueAccent : Colors.grey.shade400,
+              width: _hasFocus ? 2 : 1,
+            ),
+          ),
+          child: TextField(
+            focusNode: _focusNode,
+            obscureText: widget.obscureText,
+            decoration: InputDecoration(
+              labelText: widget.label,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             ),
           ),
         ),
