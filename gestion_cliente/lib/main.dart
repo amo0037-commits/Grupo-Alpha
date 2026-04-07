@@ -22,6 +22,7 @@ void main() async {
   options: DefaultFirebaseOptions.currentPlatform,
 );
 
+import 'package:gestion_cliente/screens/splash_screen.dart';
 
   runApp(const AlphaApp());
 }
@@ -58,6 +59,7 @@ class AlphaApp extends StatelessWidget {
           );
         },
       },
+      home: const SplashScreen(),
     );
   }
 }

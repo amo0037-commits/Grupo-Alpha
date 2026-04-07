@@ -5,8 +5,9 @@ import 'package:flutter/animation.dart';
 class AppColors {
   static const primaryColor = Color(0xFF1565C0);   
   static const secondaryColor = Color(0xFF42A5F5);
-  static const backgroundColor = Color(0xFFCDE6FA);  
+  static const backgroundColor =Color(0xFFF1F3F6);  
 
+/*
   static const primaryColor2 = Color(0xFF55D9E7);
   static const secondaryColor2 = Color(0xFF4DD0E1);
   static const backgroundColor2 = Color(0xFFD7F3F7);
@@ -23,6 +24,6 @@ class AppColors {
   static const secondaryColor5 = Color(0xFFEF5350);
   static const backgroundColor5 = Color(0xFFFFCFD5);
 
-  
+  */
 }
 
