@@ -69,7 +69,7 @@ class ServicePage extends StatelessWidget {
 
     const Expanded(
       child: Text(
-        'Ofrecemos un servicio de peluqueria y estetica',
+        'Realza tu belleza con nuestro servicio de peluquería y estética, ofrecemos atención personalizada para que luzcas increíble en cada ocasión: \n\nCortes modernos, peinados, coloración, tratamientos capilares, y mucho mas. \n\n Reserva tu plaza ya mismo. ',
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
