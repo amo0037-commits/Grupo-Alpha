@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_cliente/core/app_colors.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_cliente/core/app_colors.dart';
@@ -112,42 +109,16 @@ class _RegisterPageState extends State<RegisterPage> {
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF),Color(0xFF4B5563) ],
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 700.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                   border: OutlineInputBorder(),
                 colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
               ),
             ),
           ),
         ),
-
-        // con esto desplazamos el contenido haciendo scroll si se fuera a tapar
         body: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.only(
               left: MediaQuery.of(context).size.width * 0.10,
               right: MediaQuery.of(context).size.width * 0.10,
-              //esto hace que el teclado no tape  contenido,  se ajusta segun el tamaño del teclado
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-
-            const SizedBox(height: 20),
-
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Contraseña',
-                border: OutlineInputBorder(),
-              ),
               bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: Column(
@@ -255,24 +226,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ],
             ),
           ),
-          TextField(
-            controller: confirmPasswordController,
-            obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Confirmar contraseña',
-              border: OutlineInputBorder(),
-            ),
-          ),
-
-
-
-            const SizedBox(height: 30),
-
-          ElevatedButton(
-            onPressed: register,
-            child: const Text('Registrarse'),
-          ),
-          ],
         ),
       ),
     );
