@@ -73,7 +73,7 @@ class ServicePage extends StatelessWidget {
                     imagePath: 'assets/images/yogainfo.png',
                     title: 'Centro de yoga y pilates',
                     description:
-                        'Ofrecemos un servicio de yoga y pilates perfecto para la relajación y paz mental',
+                        '\n Encuentra equilibrio, bienestar y armonía en nuestro centro de yoga y pilates. \n\n Ofrecemos clases diseñadas para fortalecer tu cuerpo, mejorar tu flexibilidad, corregir tu postura y ayudarte a liberar el estrés del día a día. \n Nuestros programas combinan técnicas de respiración, relajación y ejercicios guiados por profesionales para adaptarse a todos los niveles.',
                   ),
                   SizedBox(height: 60),
                   ServiceRow(
