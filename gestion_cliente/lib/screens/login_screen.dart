@@ -23,61 +23,25 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => loading = true);
 
     try {
-      // 🔐 Firebase Auth
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      final uid = userCredential.user!.uid;
-
-      // 📦 Firestore
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-
-      if (!userDoc.exists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario no encontrado en Firestore')),
-        );
-        setState(() => loading = false);
-        return;
-      }
-
-      final data = userDoc.data() as Map<String, dynamic>;
-      final rol = data['rol'] ?? 'usuario';
-      final negocios = List<String>.from(data['negocios'] ?? []);
-
-      setState(() => loading = false);
-
-      // 🚀 Navegación
-      if (rol == 'admin') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const AdminPage()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DashboardPage(negocios: negocios),
-          ),
-        );
-      }
+      // 🔥 No hacemos navegación aquí
+      // RootPage detecta login automáticamente
     } on FirebaseAuthException catch (e) {
       String mensaje = 'Error al iniciar sesión';
 
       if (e.code == 'user-not-found') mensaje = 'Usuario no encontrado';
       if (e.code == 'wrong-password') mensaje = 'Contraseña incorrecta';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensaje)),
-      );
-
-      setState(() => loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mensaje)));
     }
+
+    setState(() => loading = false);
   }
 
   @override
@@ -89,19 +53,18 @@ class _LoginPageState extends State<LoginPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFE0E3E7),
-            Color(0xFF64B5F6),
-          ],
+          colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
+          leading: Navigator.canPop(context)
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context),
+                )
+              : null,
           title: const Text('Iniciar sesión'),
           backgroundColor: Colors.transparent,
           flexibleSpace: Container(
@@ -130,13 +93,20 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
 
                 // Contraseña animada con controlador
-                AnimatedTextField(label: 'Contraseña', obscureText: true, controller: passwordController),
+                AnimatedTextField(
+                  label: 'Contraseña',
+                  obscureText: true,
+                  controller: passwordController,
+                ),
 
                 const SizedBox(height: 20),
 
                 Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400, minWidth: 200),
+                    constraints: const BoxConstraints(
+                      maxWidth: 400,
+                      minWidth: 200,
+                    ),
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
@@ -166,9 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const RegisterPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const RegisterPage()),
                     );
                   },
                   child: const Text('¿No tienes cuenta? Regístrate'),
@@ -193,9 +161,9 @@ class AnimatedTextField extends StatefulWidget {
   const AnimatedTextField({
     required this.label,
     this.obscureText = false,
-     required this.controller,
+    required this.controller,
     super.key,
-    });
+  });
 
   @override
   State<AnimatedTextField> createState() => _AnimatedTextFieldState();
@@ -236,7 +204,10 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
             decoration: InputDecoration(
               labelText: widget.label,
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 16,
+              ),
             ),
           ),
         ),

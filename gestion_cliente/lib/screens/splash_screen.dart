@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart ';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:gestion_cliente/screens/inicio_screen.dart';
+import 'package:gestion_cliente/screens/root_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -62,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 3));
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const PaginaInicio()),
+      MaterialPageRoute(builder: (context) => const RootPage()),
     );
   }
 
