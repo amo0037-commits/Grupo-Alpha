@@ -80,7 +80,7 @@ class ServicePage extends StatelessWidget {
                     imagePath: 'assets/images/academiainfo.png',
                     title: 'Academia',
                     description:
-                        'Ofrecemos un servicio de academias de muchas asignaturas y especialidades',
+                        '\n Impulsa tu aprendizaje en nuestra academia \n\n Ofrecemos formación de calidad con programas diseñados para fortalecer conocimientos, desarrollar habilidades y ayudarte a alcanzar tus metas académicas o profesionales. Contamos con docentes capacitados, atención personalizada y un ambiente ideal para aprender de forma práctica y efectiva.',
                   ),
                 ],
               ),
