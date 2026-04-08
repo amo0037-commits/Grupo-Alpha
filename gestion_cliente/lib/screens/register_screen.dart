@@ -13,11 +13,11 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final TextEditingController telefonoController = TextEditingController();
   final TextEditingController direccionController = TextEditingController();
   final TextEditingController edadController = TextEditingController();
-
 
   bool loading = false;
   double opacity = 0;
@@ -33,7 +33,8 @@ class _RegisterPageState extends State<RegisterPage> {
     "Academia": false,
   };
 
-  @override void initState() {
+  @override
+  void initState() {
     super.initState();
 
     Future.delayed(const Duration(milliseconds: 200), () {
@@ -62,11 +63,11 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => loading = true);
 
     try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
 
       final user = userCredential.user;
 
@@ -75,10 +76,7 @@ class _RegisterPageState extends State<RegisterPage> {
           .map((e) => e.key)
           .toList();
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid)
-          .set({
+      await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
         "email": user.email,
         "telefono": telefonoController.text.trim(),
         "direccion": direccionController.text.trim(),
@@ -94,7 +92,6 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       Navigator.pop(context);
-
     } on FirebaseAuthException catch (e) {
       String mensaje = 'Error';
 
@@ -104,14 +101,13 @@ class _RegisterPageState extends State<RegisterPage> {
         mensaje = 'La contraseña es muy débil';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensaje)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mensaje)));
     }
 
     setState(() => loading = false);
   }
-
 
   InputDecoration customInput(String label, IconData icon) {
     return InputDecoration(
@@ -142,7 +138,7 @@ class _RegisterPageState extends State<RegisterPage> {
           title: const Text('Registro'),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          ),
+        ),
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
@@ -156,7 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   curve: Curves.easeOut,
                   transform: Matrix4.translationValues(0, offsetY, 0),
                   child: Card(
-                    color: const Color.fromARGB(255, 126, 141, 161), 
+                    color: const Color.fromARGB(255, 126, 141, 161),
                     elevation: 10,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -164,148 +160,176 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
-                      children: [
+                        children: [
+                          const SizedBox(height: 10),
 
-                const SizedBox(height: 10),
+                          // Email
+                          TextField(
+                            controller: emailController,
+                            decoration: customInput('Email', Icons.email),
+                          ),
 
-                // Email
-                TextField(
-                  controller: emailController,
-                  decoration: customInput('Email', Icons.email)
-                ),
+                          const SizedBox(height: 15),
 
-                const SizedBox(height: 15),
+                          // Teléfono
+                          TextField(
+                            controller: telefonoController,
+                            decoration: customInput('Teléfono', Icons.phone),
+                          ),
 
-                // Teléfono
-                  TextField(
-                    controller: telefonoController,
-                    decoration: customInput('Teléfono', Icons.phone),
-                  ),
+                          const SizedBox(height: 15),
 
-                const SizedBox(height: 15),
-
-                //  Dirección
-                 TextField(
-                    controller: direccionController,
-                    decoration: customInput('Dirección', Icons.location_on),
-                  ),
-
-                const SizedBox(height: 15),
-
-                // Edad
-                 TextField(
-                    controller: edadController,
-                    keyboardType: TextInputType.number,
-                    decoration: customInput('Edad', Icons.cake),
-                 ),
-
-                const SizedBox(height: 15),
-
-                  TextField(
-                    controller: passwordController,
-                    obscureText: isPasswordHidden,
-                    decoration: customInput('Contraseña', Icons.lock).copyWith(
-                      suffixIcon: IconButton(
-                        icon: Icon(isPasswordHidden
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            isPasswordHidden = !isPasswordHidden;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 15),
-
-                // Confirm Password
-                TextField(
-                  controller: confirmPasswordController,
-                  obscureText: isConfirmPasswordHidden,
-                  decoration: customInput('Confirmar contraseña', Icons.lock).copyWith(
-                      suffixIcon: IconButton(
-                        icon: Icon(isConfirmPasswordHidden
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            isConfirmPasswordHidden = !isConfirmPasswordHidden;
-                          });
-                        },
-                      ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Negocios
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Tipo de negocio",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-
-                Column(
-                  children: negocios.keys.map((key) {
-                    return CheckboxListTile(
-                      title: Text(
-                        key,
-                        style: const TextStyle(color: Colors.white),
-                        ),
-                      value: negocios[key],
-                      onChanged: (value) {
-                        setState(() {
-                          negocios[key] = value!;
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Botón
-                MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 250,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: loading ? null : register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF1565C0),
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: loading
-                          ? const SizedBox(
-                              key: ValueKey('loading'),
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(color: Colors.white),
-                            )
-                          : const Text(
-                              'Registrarse',
-                              key: ValueKey('text'),
-                              style: TextStyle(fontSize: 16),
+                          //  Dirección
+                          TextField(
+                            controller: direccionController,
+                            decoration: customInput(
+                              'Dirección',
+                              Icons.location_on,
                             ),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          // Edad
+                          TextField(
+                            controller: edadController,
+                            keyboardType: TextInputType.number,
+                            decoration: customInput('Edad', Icons.cake),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          TextField(
+                            controller: passwordController,
+                            obscureText: isPasswordHidden,
+                            decoration: customInput('Contraseña', Icons.lock)
+                                .copyWith(
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      isPasswordHidden
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        isPasswordHidden = !isPasswordHidden;
+                                      });
+                                    },
+                                  ),
+                                ),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          // Confirm Password
+                          TextField(
+                            controller: confirmPasswordController,
+                            obscureText: isConfirmPasswordHidden,
+                            decoration:
+                                customInput(
+                                  'Confirmar contraseña',
+                                  Icons.lock,
+                                ).copyWith(
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      isConfirmPasswordHidden
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        isConfirmPasswordHidden =
+                                            !isConfirmPasswordHidden;
+                                      });
+                                    },
+                                  ),
+                                ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Negocios
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Tipo de negocio",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+
+                          Column(
+                            children: negocios.keys.map((key) {
+                              return CheckboxListTile(
+                                title: Text(
+                                  key,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                value: negocios[key],
+                                onChanged: (value) {
+                                  setState(() {
+                                    negocios[key] = value!;
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Botón
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 250,
+                              height: 50,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF1565C0),
+                                      Color(0xFF64B5F6),
+                                    ], // degradado azul
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: loading ? null : register,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFF1565C0),
+                                    elevation: 5,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    child: loading
+                                        ? const SizedBox(
+                                            key: ValueKey('loading'),
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Registrarse',
+                                            key: ValueKey('text'),
+                                            style: TextStyle(fontSize: 16),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ),
-                      ],
                     ),
                   ),
                 ),
@@ -314,7 +338,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
-      )
     );
   }
 }

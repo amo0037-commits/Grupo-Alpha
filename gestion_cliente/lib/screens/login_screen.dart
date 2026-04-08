@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:gestion_cliente/core/app_colors.dart';
+
 import 'register_screen.dart';
 import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/admin_page.dart';
