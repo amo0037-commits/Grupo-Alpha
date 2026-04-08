@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+
+import 'package:gestion_cliente/screens/profile_page.dart';
 class DashboardPage extends StatelessWidget {
   final List<String> negocios;
   const DashboardPage({super.key, required this.negocios});
@@ -14,6 +16,8 @@ class DashboardPage extends StatelessWidget {
     'Academia': '/academia',
   };
 
+
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -25,11 +29,16 @@ class DashboardPage extends StatelessWidget {
       });
       return const SizedBox();
     }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Servicios'),
         centerTitle: true,
+        actions: [CircleAvatar(
+          backgroundColor: Colors.blue,
+          child: Text('YD')
+        )]
+
+
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
