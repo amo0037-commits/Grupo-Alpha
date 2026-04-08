@@ -52,21 +52,21 @@ class ServicePage extends StatelessWidget {
                     imagePath: 'assets/images/peluqueriainfo2.png',
                     title: 'Peluquería',
                     description:
-                        'Ofrecemos un servicio de peluquería y estética',
+                       '\n Realza tu belleza con nuestro servicio de peluquería y estética: \n\n Te ofrecemos atención personalizada y profesional para que luzcas increíble en cada ocasión: \n cortes modernos, peinados, coloración, tratamientos capilares y mucho más.',
                   ),
                   SizedBox(height: 60),
                   ServiceRow(
                     imagePath: 'assets/images/clinicafisioinfo.png',
                     title: 'Clínica de fisioterapia',
                     description:
-                        'Ofrecemos un servicio de fisioterapia para rehabilitación y recuperación',
+                        ' \n Recupera tu bienestar y mantener un ritmo saludable con nuestro servicio de fisioterapia. \n\n Te ofrecemos atención especializada para aliviar dolores musculares, rehabilitar lesiones, mejorar tu movilidad y ayudarte a recuperar tu calidad de vida. \n Contamos con tratamientos personalizados, terapia manual, ejercicios terapéuticos y acompañamiento profesional para cada necesidad.',
                   ),
                   SizedBox(height: 60),
                   ServiceRow(
                     imagePath: 'assets/images/gimnasioinfo.png',
                     title: 'Gimnasio',
                     description:
-                        'Ofrecemos un servicio de gimnasio altamente preparado y equipado',
+                        ' \n Transforma tu cuerpo y mejora tu salud en nuestro gimnasio. \n\n Te ofrecemos un espacio equipado para que entrenes con comodidad, seguridad y motivación. Contamos con rutinas personalizadas, asesoría profesional \n y actividades diseñadas para ayudarte a alcanzar tus objetivos.',
                   ),
                   SizedBox(height: 60),
                   ServiceRow(
