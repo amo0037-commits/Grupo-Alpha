@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Asegúrate de tener este import
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
@@ -20,7 +20,7 @@ class _PaginaInicioState extends State<PaginaInicio>
   late AnimationController _logoController;
   late Animation<double> _logoAnim;
   
-  // Variable para controlar el estado de carga al pulsar Dashboard
+  //Declarar la variable de estado para la carga
   bool _isLoadingDashboard = false;
 
   @override
@@ -33,8 +33,8 @@ class _PaginaInicioState extends State<PaginaInicio>
     );
 
     _logoAnim = Tween<double>(
-      begin: 0.95,
-      end: 1.05,
+      begin: 0.97,
+      end: 1.03,
     ).chain(CurveTween(curve: Curves.easeInOut)).animate(_logoController);
 
     _logoController.repeat(reverse: true);
@@ -46,7 +46,6 @@ class _PaginaInicioState extends State<PaginaInicio>
     super.dispose();
   }
 
-  // Función para obtener negocios y navegar
   Future<void> _irAlDashboard() async {
     setState(() => _isLoadingDashboard = true);
 
@@ -87,7 +86,15 @@ class _PaginaInicioState extends State<PaginaInicio>
 
   @override
   Widget build(BuildContext context) {
-    double sizeIcono = min(max(MediaQuery.of(context).size.width * 0.07, 24), 50);
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    //Definir sizeIcono para que sea accesible en todo el build
+    double sizeIcono = min(max(screenWidth * 0.07, 24), 50);
+
+    double logoSize = screenWidth < 600
+        ? screenWidth * 0.9
+        : min(screenWidth * 0.4, 800);
 
     return Container(
       decoration: const BoxDecoration(
@@ -126,18 +133,32 @@ class _PaginaInicioState extends State<PaginaInicio>
             ),
             IconButton(
               icon: Icon(Icons.search, size: sizeIcono),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReservaPage())),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ReservaPage()),
+              ),
             ),
             IconButton(
               icon: Icon(Icons.info, size: sizeIcono),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServicePage())),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ServicePage()),
+              ),
             ),
             
-            // BOTÓN DASHBOARD ACTUALIZADO
             _isLoadingDashboard 
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 15),
-                  child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))),
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20, 
+                      height: 20, 
+                      child: CircularProgressIndicator(
+                        color: Colors.white, 
+                        strokeWidth: 2
+                      )
+                    )
+                  ),
                 )
               : IconButton(
                   icon: Icon(Icons.calendar_month_outlined, size: sizeIcono),
@@ -145,61 +166,33 @@ class _PaginaInicioState extends State<PaginaInicio>
                 ),
           ],
         ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            double screenHeight = constraints.maxHeight;
-            double screenWidth = constraints.maxWidth;
-
-            double logoSize = screenWidth < 600 ? screenWidth * 0.9 : min(screenWidth * 0.5, 750);
-            double textFontSize = screenWidth < 600 ? 24.0 : min(screenHeight * 0.05, 48);
-
-            return SingleChildScrollView(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.05),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedBuilder(
-                        animation: _logoAnim,
-                        builder: (context, child) => Transform.scale(scale: _logoAnim.value, child: child),
-                        child: Image.asset('assets/images/LogoAlphaAppPagInicio.png', width: logoSize, fit: BoxFit.contain),
-                      ),
-                      SizedBox(height: screenHeight * 0.2),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02),
-                            color: const Color(0xFF4B5563).withAlpha(40),
-                            child: SizedBox(
-                              width: min(screenWidth * 0.6, 600),
-                              child: DefaultTextStyle(
-                                style: TextStyle(fontSize: textFontSize, fontWeight: FontWeight.bold, color: Colors.white),
-                                child: AnimatedTextKit(
-                                  animatedTexts: [
-                                    ColorizeAnimatedText(
-                                      'Bienvenido a AlphaApp',
-                                      textAlign: TextAlign.center,
-                                      textStyle: TextStyle(fontSize: textFontSize, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
-                                      colors: [const Color(0xFF0D47A1), const Color(0xFF1565C0), const Color(0xFF64B5F6), const Color(0xFF9CA3AF)],
-                                      speed: const Duration(milliseconds: 400),
-                                    ),
-                                  ],
-                                  repeatForever: true,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+        body: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: screenHeight - 100), // Ajustado por el AppBar
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: _logoAnim,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _logoAnim.value,
+                        child: child,
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/images/LogoAlphaAppPagInicio.png',
+                      width: logoSize,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  // Aquí puedes añadir el texto animado si lo deseas
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
