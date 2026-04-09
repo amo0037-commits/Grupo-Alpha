@@ -41,7 +41,8 @@ class _LoginPageState extends State<LoginPage> {
       ).showSnackBar(SnackBar(content: Text(mensaje)));
     }
 
-    setState(() => loading = false);
+      if (!mounted) return; // <-- para el setState final
+  setState(() => loading = false);
   }
 
   @override
