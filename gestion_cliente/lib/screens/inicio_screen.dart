@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class PaginaInicio extends StatefulWidget {
   const PaginaInicio({super.key});
 
@@ -91,12 +91,10 @@ class _PaginaInicioState extends State<PaginaInicio>
 
           actions: [
             IconButton(
-              icon: Icon(Icons.person, size: sizeIcono),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
+              icon: Icon(Icons.logout, size: sizeIcono),
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                // RootPage detectará automáticamente y mostrará LoginPage
               },
             ),
             IconButton(
@@ -107,8 +105,8 @@ class _PaginaInicioState extends State<PaginaInicio>
                   MaterialPageRoute(builder: (context) => const ReservaPage()),
                 );
               },
-            ),  
-             IconButton(
+            ),
+            IconButton(
               icon: Icon(Icons.info, size: sizeIcono),
               onPressed: () {
                 Navigator.push(
@@ -116,7 +114,7 @@ class _PaginaInicioState extends State<PaginaInicio>
                   MaterialPageRoute(builder: (context) => const ServicePage()),
                 );
               },
-            ),  
+            ),
           ],
         ),
 
