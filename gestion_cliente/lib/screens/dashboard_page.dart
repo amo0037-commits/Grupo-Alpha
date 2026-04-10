@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
 import 'package:gestion_cliente/screens/profile_page.dart';
 import 'package:intl/intl.dart';
-
+import 'package:flutter/services.dart';
 
 class DashboardPage extends StatefulWidget {
   final List<String> negocios;
@@ -223,7 +223,7 @@ class _DashboardPageState extends State<DashboardPage>
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Column(
               children: [
-                // HEADER MEJORADO
+                // HEADER 
                 Center(
                   child: Container(
                     constraints: BoxConstraints(
@@ -240,7 +240,7 @@ class _DashboardPageState extends State<DashboardPage>
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.grey.shade400, // borde del contenedor
+                        color: Colors.grey.shade400,
                         width: 2,
                       ),
                       boxShadow: [
@@ -261,11 +261,11 @@ class _DashboardPageState extends State<DashboardPage>
                           border: Border.all(color: Colors.transparent,),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.waving_hand, size: 42, color: Colors.white),
+                        child: const Icon(Icons.waving_hand, size: 40, color: Colors.white),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
-                      // Texto "Bienvenido" con borde
+                      // Texto "Bienvenido"
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
@@ -274,17 +274,17 @@ class _DashboardPageState extends State<DashboardPage>
                           borderRadius: BorderRadius.circular(8),
                         ),
                           child: const Text(
-                            'Bienvenido',
+                            'Bienvenido/a',
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 26,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 1),
 
-                        // Email del usuario con borde
+                        // Nombre del usuario
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
@@ -292,13 +292,32 @@ class _DashboardPageState extends State<DashboardPage>
                             border: Border.all(color: Colors.transparent,),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            user.email ?? '',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.white70,
-                            ),
+                          child: FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(user.uid)
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const Text(
+                                  'Cargando...',
+                                  style: TextStyle(color: Colors.white70),
+                                );
+                              }
+
+                              final data = snapshot.data!.data() as Map<String, dynamic>;
+                              final nombre = data['nombre'] ?? '';
+                              final apellidos = data['apellidos'] ?? '';
+
+                              return Text(
+                                '$nombre $apellidos',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.white70,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -415,6 +434,7 @@ class _DashboardPageState extends State<DashboardPage>
                                 );
 
                                 if (confirm == true) {
+                                    HapticFeedback.mediumImpact(); // Vibración ligera al confirmar eliminación
                                     try {
                                       await FirebaseFirestore.instance
                                         .collection('reservas')
