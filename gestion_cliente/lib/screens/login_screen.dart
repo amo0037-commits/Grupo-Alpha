@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordController.text.trim(),
       );
 
-      // 🔥 No hacemos navegación aquí
+      // No hacemos navegación aquí
       // RootPage detecta login automáticamente
     } on FirebaseAuthException catch (e) {
       String mensaje = 'Error al iniciar sesión';
