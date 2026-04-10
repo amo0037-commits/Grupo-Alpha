@@ -67,10 +67,6 @@ class profile_page extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 15,),
-                const CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(''),
-                ),
                 const SizedBox(height: 15),
                FutureBuilder<DocumentSnapshot>(
   future: FirebaseFirestore.instance
@@ -92,8 +88,25 @@ class profile_page extends StatelessWidget {
     String apellido = data['apellidos'] ?? "Nombre de Usuario";
     String email = data['email'] ?? user.email ?? "";
 
+    String iniciales = "";
+            if (nombre.isNotEmpty) iniciales += nombre[0].toUpperCase();
+            if (apellido.isNotEmpty) iniciales += apellido[0].toUpperCase();
+            if (iniciales.isEmpty) iniciales = "U"; // "U" de Usuario por defecto
+
     return Column(
       children: [
+        CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Color(0xFF64B5F6),
+                        child: Text(
+                          iniciales,
+                          style: const TextStyle(
+                            fontSize: 35,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
         Text(
         [nombre, apellido].where((e) => e.isNotEmpty).join(" "),
         style: const TextStyle(
