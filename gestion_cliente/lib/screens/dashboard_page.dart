@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
 import 'package:gestion_cliente/screens/profile_page.dart';
+import 'package:intl/intl.dart';
+
 
 class DashboardPage extends StatefulWidget {
   final List<String> negocios;
@@ -50,7 +52,7 @@ class _DashboardPageState extends State<DashboardPage>
     super.dispose();
   }
 
-  // 🔥 ICONOS PERSONALIZADOS
+  // ICONOS PERSONALIZADOS
   IconData getIcono(String negocio) {
     switch (negocio) {
       case 'Gimnasio':
@@ -138,7 +140,7 @@ class _DashboardPageState extends State<DashboardPage>
           ),
         ),
 
-        // 🔥 LOGO MÁS GRANDE
+        // LOGO MÁS GRANDE
         title: SizedBox(
           height: 130,
           child: Image.asset(
@@ -225,7 +227,7 @@ class _DashboardPageState extends State<DashboardPage>
                 Center(
                   child: Container(
                     constraints: BoxConstraints(
-                      maxWidth: screenWidth > 1600 ? 900 : screenWidth * 0.95,
+                      maxWidth: screenWidth > 1600 ? 1100 : screenWidth * 0.98,
                     ),
                     padding: const EdgeInsets.all(25),
                     margin: const EdgeInsets.only(bottom: 40),
@@ -256,7 +258,7 @@ class _DashboardPageState extends State<DashboardPage>
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.transparent,
-                          border: Border.all(color: Colors.grey.shade300, width: 2),
+                          border: Border.all(color: Colors.transparent,),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.waving_hand, size: 42, color: Colors.white),
@@ -268,7 +270,7 @@ class _DashboardPageState extends State<DashboardPage>
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.transparent,
-                          border: Border.all(color: Colors.grey.shade300, width: 2),
+                          border: Border.all(color: Colors.transparent,),
                           borderRadius: BorderRadius.circular(8),
                         ),
                           child: const Text(
@@ -287,7 +289,7 @@ class _DashboardPageState extends State<DashboardPage>
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.transparent,
-                            border: Border.all(color: Colors.grey.shade300, width: 2),
+                            border: Border.all(color: Colors.transparent,),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -367,6 +369,8 @@ class _DashboardPageState extends State<DashboardPage>
                     final servicio = data['servicio'];
                     final clase = data['clase'];
                     final hora = data['hora'];
+                    final fecha = (data['fecha'] as Timestamp).toDate();
+
 
                     return Center(
                       child: SizedBox(
@@ -377,8 +381,16 @@ class _DashboardPageState extends State<DashboardPage>
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20)),
                           child: ListTile(
-                            title: Text(servicio),
-                            subtitle: Text('$clase - $hora'),
+                            title: Text('$servicio'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(clase),
+                                Text('📅 ${DateFormat('dd/MM/yyyy').format(fecha)}'),
+                                Text('⏰ $hora'),
+                              ],
+                            ),
+
                             trailing: IconButton(
                               icon: const Icon(Icons.delete,
                                   color: Colors.red),
