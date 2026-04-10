@@ -2,9 +2,12 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:gestion_cliente/screens/login_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PaginaInicio extends StatefulWidget {
   const PaginaInicio({super.key});
@@ -17,18 +20,13 @@ class _PaginaInicioState extends State<PaginaInicio>
     with SingleTickerProviderStateMixin {
   late AnimationController _logoController;
   late Animation<double> _logoAnim;
-
-  bool _showText = false;
+  
+  //Declarar la variable de estado para la carga
+  bool _isLoadingDashboard = false;
 
   @override
   void initState() {
     super.initState();
-
-    Future.delayed(const Duration(milliseconds: 500), () {
-      setState(() {
-        _showText = true;
-      });
-    });
 
     _logoController = AnimationController(
       vsync: this,
@@ -36,8 +34,8 @@ class _PaginaInicioState extends State<PaginaInicio>
     );
 
     _logoAnim = Tween<double>(
-      begin: 0.95,
-      end: 1.05,
+      begin: 0.97, // valor base móvil
+      end: 1.03,   // valor máximo móvil
     ).chain(CurveTween(curve: Curves.easeInOut)).animate(_logoController);
 
     _logoController.repeat(reverse: true);
@@ -49,13 +47,63 @@ class _PaginaInicioState extends State<PaginaInicio>
     super.dispose();
   }
 
+  Future<void> _irAlDashboard() async {
+    setState(() => _isLoadingDashboard = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          final data = userDoc.data() as Map<String, dynamic>;
+          List<String> negocios = List<String>.from(data['negocios'] ?? []);
+
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardPage(negocios: negocios),
+              ),
+            );
+          }
+        } else {
+          _mostrarMensaje("No se encontró tu perfil de usuario.");
+        }
+      }
+    } catch (e) {
+      _mostrarMensaje("Error al cargar datos: $e");
+    } finally {
+      if (mounted) setState(() => _isLoadingDashboard = false);
+    }
+  }
+
+  void _mostrarMensaje(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
-    //Variable para el tamaño de los iconos en el AppBar
-    double sizeIcono = min(
-      max(MediaQuery.of(context).size.width * 0.07, 24),
-      50,
-    );
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // Ajuste de tamaño del logo
+    double logoSize = screenWidth < 600
+        ? screenWidth * 0.9
+        : min(screenWidth * 0.4, 800);
+
+    // Ajuste de animación según tamaño de pantalla
+    double scaleBegin = screenWidth < 600 ? 0.97 : 0.93;
+    double scaleEnd = screenWidth < 600 ? 1.03 : 1.07;
+
+    // Solo se actualiza Tween si cambió la pantalla
+    _logoAnim = Tween<double>(begin: scaleBegin, end: scaleEnd)
+        .chain(CurveTween(curve: Curves.easeInOut))
+        .animate(_logoController);
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -67,11 +115,9 @@ class _PaginaInicioState extends State<PaginaInicio>
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          titleSpacing:
-              0, // Elimina el espacio predeterminado a la izquierda del título
-          centerTitle: false, // Alinea el título a la izquierda
-          toolbarHeight:
-              100, // Aumenta la altura del AppBar para acomodar el logo
+          titleSpacing: 0,
+          centerTitle: false,
+          toolbarHeight: 100,
           title: SizedBox(
             height: 80,
             child: Image.asset(
@@ -88,136 +134,72 @@ class _PaginaInicioState extends State<PaginaInicio>
               ),
             ),
           ),
-
           actions: [
             IconButton(
-              icon: Icon(Icons.person, size: sizeIcono),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
+              icon: Icon(Icons.logout, size: min(max(screenWidth * 0.07, 24), 50)),
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
               },
             ),
             IconButton(
-              icon: Icon(Icons.search, size: sizeIcono),
+              icon: Icon(Icons.search, size: min(max(screenWidth * 0.07, 24), 50)),
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ReservaPage()),
                 );
               },
-            ),  
-             IconButton(
-              icon: Icon(Icons.info, size: sizeIcono),
+            ),
+            IconButton(
+              icon: Icon(Icons.info, size: min(max(screenWidth * 0.07, 24), 50)),
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ServicePage()),
                 );
               },
-            ),  
+            ),
+            
+            _isLoadingDashboard 
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20, 
+                      height: 20, 
+                      child: CircularProgressIndicator(
+                        color: Colors.white, 
+                        strokeWidth: 2
+                      )
+                    )
+                  ),
+                )
+              : IconButton(
+                  icon: Icon(Icons.calendar_month_outlined, size: min(max(screenWidth * 0.07, 24), 50)),
+                  onPressed: _irAlDashboard,
+                ),
           ],
         ),
-
-        // SinglechildScrollView para permitir scroll en caso de pantallas pequeñas.
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            double screenHeight = constraints.maxHeight;
-            double screenWidth = constraints.maxWidth;
-
-            double logoSize = screenWidth < 600
-                ? screenWidth *
-                      0.9 // Telefono ocupa mas
-                : min(screenWidth * 0.5, 750); // PC: máximo 750px
-
-            double textFontSize = screenWidth < 600
-                ? 24.0 // móvil
-                : min(screenHeight * 0.05, 48); // PC
-            double spacing = screenHeight * 0.05;
-
-            return SingleChildScrollView(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.05,
-                    vertical: screenHeight * 0.05,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Logo animado
-                      AnimatedBuilder(
-                        animation: _logoAnim,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _logoAnim.value,
-                            child: child,
-                          );
-                        },
-                        child: Image.asset(
-                          'assets/images/LogoAlphaAppPagInicio.png',
-                          width: logoSize,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-
-                      SizedBox(height: screenHeight * 0.2),
-
-                      // Texto animado con fondo difuminado
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.05,
-                              vertical: screenHeight * 0.02,
-                            ),
-                            color: Color(0xFF4B5563).withAlpha(40),
-                            child: SizedBox(
-                              width: min(
-                                screenWidth * 0.6,
-                                600,
-                              ), // ancho máximo para PC
-                              child: DefaultTextStyle(
-                                style: TextStyle(
-                                  fontSize: textFontSize,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                child: AnimatedTextKit(
-                                  animatedTexts: [
-                                    ColorizeAnimatedText(
-                                      'Bienvenido a AlphaApp',
-                                      textAlign: TextAlign.center,
-                                      textStyle: TextStyle(
-                                        fontSize: textFontSize,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Roboto',
-                                      ),
-                                      colors: [
-                                        Color(0xFF0D47A1),
-                                        Color(0xFF1565C0),
-                                        Color(0xFF64B5F6),
-                                        Color(0xFF9CA3AF),
-                                      ],
-                                      speed: Duration(milliseconds: 400),
-                                    ),
-                                  ],
-                                  repeatForever: true,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+        body: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: screenHeight),
+            child: Center(
+              child: AnimatedBuilder(
+                animation: _logoAnim,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _logoAnim.value,
+                    child: child,
+                  );
+                },
+                child: Image.asset(
+                  'assets/images/LogoAlphaAppPagInicio.png',
+                  width: logoSize,
+                  fit: BoxFit.contain,
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
