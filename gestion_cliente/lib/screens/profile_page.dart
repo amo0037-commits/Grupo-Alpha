@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 
 class profile_page extends StatelessWidget {
   const profile_page({super.key});
+  
 
   
 @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFF64B5F6),
       appBar: AppBar(
         title: const Text('Mi Perfil'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.blue,
+        backgroundColor: Color(0xFF9CA3AF),
         foregroundColor: Colors.black,
       ),
       body: Column(
@@ -22,7 +27,9 @@ class profile_page extends StatelessWidget {
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Colors.lightBlue,
+              gradient: LinearGradient (
+              colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+              ),
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
             ),
             padding: const EdgeInsets.only(bottom: 30),
@@ -33,19 +40,52 @@ class profile_page extends StatelessWidget {
                   backgroundImage: NetworkImage(''),
                 ),
                 const SizedBox(height: 15),
-                const Text(
-                  'Nombre de Usuario',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'usuario@email.com',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
+               FutureBuilder<DocumentSnapshot>(
+  future: FirebaseFirestore.instance
+      .collection('users')
+      .doc(user!.uid)
+      .get(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const CircularProgressIndicator();
+    }
+
+    if (!snapshot.hasData || !snapshot.data!.exists) {
+      return const Text("No hay datos");
+    }
+
+    var data = snapshot.data!.data() as Map<String, dynamic>;
+
+    String nombre = data['nombre'] ?? "Nombre de Usuario";
+    String apellido = data['apellidos'] ?? "Nombre de Usuario";
+    String email = data['email'] ?? user.email ?? "";
+
+    return Column(
+      children: [
+        Text(
+        [nombre, apellido].where((e) => e.isNotEmpty).join(" "),
+        style: const TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+        ),
+      ),
+
+        Text(
+          email,
+          style: TextStyle(color: Colors.grey[600]),
+        ),
+      ],
+    );
+  },
+)
               ],
-            ),
+                ),
           ),
+              
+    
 
           const SizedBox(height: 20),
+
 
           // Sección de Opciones
           Expanded(
@@ -61,9 +101,10 @@ class profile_page extends StatelessWidget {
               ],
             ),
           ),
-        ],
-      ),
+          ],
+    ),
     );
+     
   }
 
   // Widget auxiliar para no repetir código de los botones
