@@ -1,8 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_cliente/core/app_themes.dart';
 import 'package:gestion_cliente/screens/splash_screen.dart';
+import 'package:gestion_cliente/screens/inicio_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:gestion_cliente/screens/login_screen.dart';
+import 'package:gestion_cliente/screens/register_screen.dart';
+import 'package:gestion_cliente/screens/dashboard_page.dart';
+import 'package:gestion_cliente/screens/admin_page.dart';
+import 'package:gestion_cliente/screens/servicios/gimnasio_page.dart';
+import 'package:gestion_cliente/screens/servicios/yoga_page.dart';
+import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
+import 'package:gestion_cliente/screens/servicios/fisioterapia_page.dart';
+import 'package:gestion_cliente/screens/servicios/academia_page.dart';
+import 'package:gestion_cliente/screens/splash_screen.dart';
 
-void main() {
+
+void main() async {
+  // 👇 NECESARIO para Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+   // 👇 INICIALIZAR FIREBASE
+  await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+);
+
+
+
   runApp(const AlphaApp());
 }
 
@@ -16,6 +39,29 @@ class AlphaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppThemes.inicioTheme,
       home: const SplashScreen(),
+      
+      routes: {
+        // Autenticación
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
+
+        // Dashboard
+        '/dashboard': (context) => DashboardPage(negocios: []),
+        '/admin': (context) => AdminPage(),
+
+        // Servicios
+        '/gimnasio': (context) => GimnasioPage(),
+        '/yoga': (context) => YogaPage(),
+        '/peluqueria': (context) => PeluqueriaPage(),
+        '/fisioterapia': (context) => FisioterapiaPage(),
+        '/academia': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+          return AcademiaPage(
+            userId: args?['userId'] ?? '',
+            negocio: args?['negocio'] ?? 'Academia',
+          );
+        },
+      },
     );
   }
 }
