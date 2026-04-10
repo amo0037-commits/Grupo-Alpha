@@ -11,6 +11,8 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController apellidoController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
@@ -77,6 +79,8 @@ class _RegisterPageState extends State<RegisterPage> {
           .toList();
 
       await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+        "nombre": nombreController.text.trim(),
+        "apellidos": apellidoController.text.trim(),
         "email": user.email,
         "telefono": telefonoController.text.trim(),
         "direccion": direccionController.text.trim(),
@@ -163,6 +167,22 @@ class _RegisterPageState extends State<RegisterPage> {
                         children: [
                           const SizedBox(height: 10),
 
+                          // Nombre y Apellidos
+                          TextField(
+                            controller: nombreController,
+                            decoration: customInput('Nombre', Icons.abc)
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          TextField(
+                            controller: apellidoController,
+                            decoration: customInput('Apellidos', Icons.abc)
+                          ),
+
+                          const SizedBox(height: 15,),
+
+                          
                           // Email
                           TextField(
                             controller: emailController,
