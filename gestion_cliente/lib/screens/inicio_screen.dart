@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
+import 'package:gestion_cliente/screens/profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class PaginaInicio extends StatefulWidget {
@@ -116,7 +117,17 @@ class _PaginaInicioState extends State<PaginaInicio>
                 );
               },
             ),
-          ],
+            IconButton(
+              icon: Icon(Icons.person, size: min(max(screenWidth * 0.07, 24), 50)),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const profile_page()),
+                );
+              },
+            ),
+       ],
+        
         ),
         body: SingleChildScrollView(
           child: ConstrainedBox(
@@ -143,3 +154,5 @@ class _PaginaInicioState extends State<PaginaInicio>
     );
   }
 }
+
+
