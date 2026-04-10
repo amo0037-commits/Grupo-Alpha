@@ -13,28 +13,60 @@ class profile_page extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      backgroundColor: const Color(0xFF64B5F6),
       appBar: AppBar(
         title: const Text('Mi Perfil'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Color(0xFF9CA3AF),
         foregroundColor: Colors.black,
+        // 1. Quitamos el backgroundColor sólido y usamos flexibleSpace
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,   // Inicia a la izquierda
+              end: Alignment.centerRight,    // Termina a la derecha
+              colors: [
+                Color(0xFF9CA3AF),           // Color gris original
+                Color(0xFF4B5563),           // Color azul claro
+              ],
+            ),
+          ),
+        ),
       ),
-      body: Column(
+      
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,    // Inicia arriba
+            end: Alignment.bottomCenter, // Termina abajo
+            colors: [
+              Color(0xFFE0E3E7), // Color claro arriba
+              Color(0xFF64B5F6), // El azul oscuro que tenías abajo
+            ],
+          ),
+        ),
+        
+        child: Column(
         children: [
           // Sección de Cabecera
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient (
-              colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              colors: [
+               Color(0xFF64B5F6),
+               Color(0xFFE0E3E7),
+               ],
               ),
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
             ),
             padding: const EdgeInsets.only(bottom: 30),
             child: Column(
               children: [
+                const SizedBox(height: 15,),
                 const CircleAvatar(
                   radius: 50,
                   backgroundImage: NetworkImage(''),
@@ -103,6 +135,7 @@ class profile_page extends StatelessWidget {
           ),
           ],
     ),
+      ),
     );
      
   }
