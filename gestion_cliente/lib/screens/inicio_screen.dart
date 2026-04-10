@@ -2,7 +2,9 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:gestion_cliente/screens/login_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
 import 'package:gestion_cliente/screens/profile_page.dart';
@@ -19,6 +21,9 @@ class _PaginaInicioState extends State<PaginaInicio>
     with SingleTickerProviderStateMixin {
   late AnimationController _logoController;
   late Animation<double> _logoAnim;
+  
+  //Declarar la variable de estado para la carga
+  bool _isLoadingDashboard = false;
 
   @override
   void initState() {
@@ -41,6 +46,44 @@ class _PaginaInicioState extends State<PaginaInicio>
   void dispose() {
     _logoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _irAlDashboard() async {
+    setState(() => _isLoadingDashboard = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          final data = userDoc.data() as Map<String, dynamic>;
+          List<String> negocios = List<String>.from(data['negocios'] ?? []);
+
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardPage(negocios: negocios),
+              ),
+            );
+          }
+        } else {
+          _mostrarMensaje("No se encontró tu perfil de usuario.");
+        }
+      }
+    } catch (e) {
+      _mostrarMensaje("Error al cargar datos: $e");
+    } finally {
+      if (mounted) setState(() => _isLoadingDashboard = false);
+    }
+  }
+
+  void _mostrarMensaje(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -128,6 +171,26 @@ class _PaginaInicioState extends State<PaginaInicio>
             ),
        ],
         
+            
+            _isLoadingDashboard 
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20, 
+                      height: 20, 
+                      child: CircularProgressIndicator(
+                        color: Colors.white, 
+                        strokeWidth: 2
+                      )
+                    )
+                  ),
+                )
+              : IconButton(
+                  icon: Icon(Icons.calendar_month_outlined, size: min(max(screenWidth * 0.07, 24), 50)),
+                  onPressed: _irAlDashboard,
+                ),
+          ],
         ),
         body: SingleChildScrollView(
           child: ConstrainedBox(
