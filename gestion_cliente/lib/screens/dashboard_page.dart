@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 import 'package:gestion_cliente/screens/profile_page.dart';
@@ -31,13 +32,56 @@ class DashboardPage extends StatelessWidget {
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis Servicios'),
-        centerTitle: true,
-        actions: [CircleAvatar(
-          backgroundColor: Colors.blue,
-          child: Text('YD')
-        )]
+  title: const Text('Mis Servicios'),
+  centerTitle: true,
+  actions: [
+    StreamBuilder<DocumentSnapshot>(
+      // Obtenemos el documento del usuario actual
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        // Mientras carga o si hay error, mostramos un avatar genérico
+        if (!snapshot.hasData || snapshot.hasError) {
+          return const Padding(
+            padding: EdgeInsets.only(right: 15),
+            child: CircleAvatar(
+              backgroundColor: Colors.blue,
+              child: Icon(Icons.person, color: Colors.white),
+            ),
+          );
+        }
 
+        // Extraemos los datos de Firestore
+        var userData = snapshot.data?.data() as Map<String, dynamic>?;
+        String nombre = userData?['nombre'] ?? "";
+        String apellido = userData?['apellidos'] ?? "";
+
+        // Lógica para obtener las iniciales
+        String iniciales = "";
+        if (nombre.isNotEmpty) iniciales += nombre[0].toUpperCase();
+        if (apellido.isNotEmpty) iniciales += apellido[0].toUpperCase();
+        
+        // Si no hay nombre ni apellido, ponemos "U" de Usuario
+        if (iniciales.isEmpty) iniciales = "U";
+
+        return Padding(
+          padding: const EdgeInsets.only(right: 15),
+          child: CircleAvatar(
+            backgroundColor: Colors.blue,
+            child: Text(
+              iniciales,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  ],
 
       ),
       body: Padding(

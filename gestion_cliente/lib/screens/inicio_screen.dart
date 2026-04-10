@@ -169,7 +169,6 @@ class _PaginaInicioState extends State<PaginaInicio>
                 );
               },
             ),
-       ],
         
             
             _isLoadingDashboard 
@@ -182,16 +181,17 @@ class _PaginaInicioState extends State<PaginaInicio>
                       child: CircularProgressIndicator(
                         color: Colors.white, 
                         strokeWidth: 2
-                      )
-                    )
+                      ),
+                    ),
                   ),
                 )
               : IconButton(
                   icon: Icon(Icons.calendar_month_outlined, size: min(max(screenWidth * 0.07, 24), 50)),
                   onPressed: _irAlDashboard,
                 ),
-          ],
+            ],
         ),
+      
         body: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: screenHeight),
