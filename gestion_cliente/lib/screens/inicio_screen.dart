@@ -188,7 +188,7 @@ class _PaginaInicioState extends State<PaginaInicio>
                           Icons.calendar_month, 
                           "Mi Agenda", 
                           _irAlDashboard,
-                          isLoading: _isLoadingDashboard,
+                          
                         ),
                         _buildQuickCard(
                           Icons.search, 
