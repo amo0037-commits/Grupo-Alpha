@@ -222,7 +222,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -345,7 +345,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 30),
 
-                    // DROPDOWN MATERIA
+                    
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.6),
@@ -419,7 +419,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 15),
 
-                    // DROPDOWN HORA
+                    
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -498,7 +498,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 35),
 
-                    // BOTÓN RESERVAR
+                    
                     SizedBox(
                       width: screenWidth * 0.7,
                       height: 55,

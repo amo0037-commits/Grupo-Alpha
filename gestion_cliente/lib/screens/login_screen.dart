@@ -1,10 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'register_screen.dart';
-import 'package:gestion_cliente/screens/dashboard_page.dart';
-import 'package:gestion_cliente/screens/admin_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,22 +25,18 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-
-      // No hacemos navegación aquí
-      // RootPage detecta login automáticamente
     } on FirebaseAuthException catch (e) {
       String mensaje = 'Error al iniciar sesión';
 
       if (e.code == 'user-not-found') mensaje = 'Usuario no encontrado';
       if (e.code == 'wrong-password') mensaje = 'Contraseña incorrecta';
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(mensaje)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(mensaje)));
     }
 
-      if (!mounted) return; // <-- para el setState final
-  setState(() => loading = false);
+    if (!mounted) return;
+    setState(() => loading = false);
   }
 
   @override
@@ -54,7 +48,11 @@ class _LoginPageState extends State<LoginPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+          colors: [
+            Color(0xFF1E293B),
+            Color(0xFF334155),
+            Color(0xFF64B5F6), // 🔥 MISMO AZUL DEL HOME
+          ],
         ),
       ),
       child: Scaffold(
@@ -62,19 +60,13 @@ class _LoginPageState extends State<LoginPage> {
         appBar: AppBar(
           leading: Navigator.canPop(context)
               ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 )
               : null,
           title: const Text('Iniciar sesión'),
           backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
-              ),
-            ),
-          ),
+          elevation: 0,
         ),
         body: SingleChildScrollView(
           child: Padding(
@@ -84,49 +76,77 @@ class _LoginPageState extends State<LoginPage> {
               bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
 
-                // Email animado con controlador
-                AnimatedTextField(label: 'Email', controller: emailController),
+                // LOGO
+                Image.asset(
+                  'assets/images/LogoAlphaAppPagInicio.png',
+                  width: 180,
+                ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 40),
 
-                // Contraseña animada con controlador
-                AnimatedTextField(
-                  label: 'Contraseña',
-                  obscureText: true,
-                  controller: passwordController,
+                _glassField(
+                  AnimatedTextField(
+                    label: 'Email',
+                    controller: emailController,
+                  ),
                 ),
 
                 const SizedBox(height: 20),
 
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 400,
-                      minWidth: 200,
+                _glassField(
+                  AnimatedTextField(
+                    label: 'Contraseña',
+                    obscureText: true,
+                    controller: passwordController,
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // BOTÓN
+                GestureDetector(
+                  onTap: login,
+                  child: Container(
+                    height: 55,
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF3B82F6),
+                          Color(0xFF60A5FA),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blueAccent.withOpacity(0.4),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4B5563), Color(0xFF9CA3AF)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Iniciar sesión'),
-                      ),
+                    child: Center(
+                      child: loading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Iniciar sesión',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -137,10 +157,15 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const RegisterPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const RegisterPage(),
+                      ),
                     );
                   },
-                  child: const Text('¿No tienes cuenta? Regístrate'),
+                  child: const Text(
+                    '¿No tienes cuenta? Regístrate',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ),
               ],
             ),
@@ -149,11 +174,32 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+  // GLASS EFFECT
+  Widget _glassField(Widget child) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-// -----------------------
-// Widget animado para TextField
-// -----------------------
+// TEXTFIELD
 class AnimatedTextField extends StatefulWidget {
   final String label;
   final bool obscureText;
@@ -178,39 +224,26 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
   void initState() {
     super.initState();
     _focusNode.addListener(() {
-      setState(() {
-        _hasFocus = _focusNode.hasFocus;
-      });
+      setState(() => _hasFocus = _focusNode.hasFocus);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400, minWidth: 200),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _hasFocus ? Colors.blueAccent : Colors.grey.shade400,
-              width: _hasFocus ? 2 : 1,
-            ),
-          ),
-          child: TextField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            obscureText: widget.obscureText,
-            decoration: InputDecoration(
-              labelText: widget.label,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 16,
-              ),
-            ),
-          ),
+    return TextField(
+      controller: widget.controller,
+      focusNode: _focusNode,
+      obscureText: widget.obscureText,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: widget.label,
+        labelStyle: TextStyle(
+          color: _hasFocus ? Colors.white : Colors.white70,
+        ),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
         ),
       ),
     );
