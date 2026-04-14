@@ -2,11 +2,12 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:gestion_cliente/screens/login_screen.dart';
-import 'package:gestion_cliente/core/app_colors.dart';
-import 'package:gestion_cliente/screens/login_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
+import 'package:gestion_cliente/screens/profile_page.dart';
 
 class PaginaInicio extends StatefulWidget {
   const PaginaInicio({super.key});
@@ -19,22 +20,15 @@ class _PaginaInicioState extends State<PaginaInicio>
     with SingleTickerProviderStateMixin {
   late AnimationController _logoController;
   late Animation<double> _logoAnim;
-
-  bool _showText = false;
+  bool _isLoadingDashboard = false;
 
   @override
   void initState() {
     super.initState();
 
-    Future.delayed(const Duration(milliseconds: 500), () {
-      setState(() {
-        _showText = true;
-      });
-    });
-
     _logoController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
     );
 
     _logoAnim = Tween<double>(
@@ -51,175 +45,214 @@ class _PaginaInicioState extends State<PaginaInicio>
     super.dispose();
   }
 
+  Future<void> _irAlDashboard() async {
+    setState(() => _isLoadingDashboard = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          final data = userDoc.data() as Map<String, dynamic>;
+          List<String> negocios = List<String>.from(data['negocios'] ?? []);
+
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardPage(negocios: negocios),
+              ),
+            );
+          }
+        } else {
+          _mostrarMensaje("No se encontró tu perfil de usuario.");
+        }
+      }
+    } catch (e) {
+      _mostrarMensaje("Error al cargar datos: $e");
+    } finally {
+      if (mounted) setState(() => _isLoadingDashboard = false);
+    }
+  }
+
+  void _mostrarMensaje(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
-    //Variable para el tamaño de los iconos en el AppBar
-    double sizeIcono = min(
-      max(MediaQuery.of(context).size.width * 0.07, 24),
-      50,
-    );
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    double logoSize = screenWidth < 600
+        ? screenWidth * 0.7
+        : min(screenWidth * 0.3, 400);
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+          colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          titleSpacing:
-              0, // Elimina el espacio predeterminado a la izquierda del título
-          centerTitle: false, // Alinea el título a la izquierda
-          toolbarHeight:
-              100, // Aumenta la altura del AppBar para acomodar el logo
-          title: SizedBox(
-            height: 80,
-            child: Image.asset(
-              'assets/images/LogoAlphaAppPagInicio.png',
-              height: 165,
-              fit: BoxFit.contain,
-            ),
-          ),
+          elevation: 0,
+          toolbarHeight: 100, // Altura generosa para el logo
           backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
-              ),
+          leadingWidth: screenWidth * 0.5, // Le damos más espacio al logo
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10),
+            child: Image.asset(
+              'assets/images/Icono_AlphaApp.png',
+              fit: BoxFit.contain,
+              alignment: Alignment.centerLeft,
             ),
           ),
-
           actions: [
             IconButton(
-              icon: Icon(Icons.person, size: sizeIcono),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
+              icon: const Icon(Icons.logout, color: Colors.white70),
+              onPressed: () => FirebaseAuth.instance.signOut(),
             ),
-            IconButton(
-              icon: Icon(Icons.search, size: sizeIcono),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReservaPage()),
-                );
-              },
-            ),  
-             IconButton(
-              icon: Icon(Icons.info, size: sizeIcono),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ServicePage()),
-                );
-              },
-            ),  
           ],
         ),
-
-        // SinglechildScrollView para permitir scroll en caso de pantallas pequeñas.
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            double screenHeight = constraints.maxHeight;
-            double screenWidth = constraints.maxWidth;
-
-            double logoSize = screenWidth < 600
-                ? screenWidth *
-                      0.9 // Telefono ocupa mas
-                : min(screenWidth * 0.5, 750); // PC: máximo 750px
-
-            double textFontSize = screenWidth < 600
-                ? 24.0 // móvil
-                : min(screenHeight * 0.05, 48); // PC
-            double spacing = screenHeight * 0.05;
-
-            return SingleChildScrollView(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.05,
-                    vertical: screenHeight * 0.05,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Logo animado
-                      AnimatedBuilder(
-                        animation: _logoAnim,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _logoAnim.value,
-                            child: child,
-                          );
-                        },
-                        child: Image.asset(
-                          'assets/images/LogoAlphaAppPagInicio.png',
-                          width: logoSize,
-                          fit: BoxFit.contain,
-                        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              // --- SECCIÓN HERO ---
+              SizedBox(
+                height: screenHeight * 0.5,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _logoAnim,
+                      builder: (context, child) => Transform.scale(
+                        scale: _logoAnim.value,
+                        child: child,
                       ),
-
-                      SizedBox(height: screenHeight * 0.2),
-
-                      // Texto animado con fondo difuminado
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.05,
-                              vertical: screenHeight * 0.02,
-                            ),
-                            color: Color(0xFF4B5563).withAlpha(40),
-                            child: SizedBox(
-                              width: min(
-                                screenWidth * 0.6,
-                                600,
-                              ), // ancho máximo para PC
-                              child: DefaultTextStyle(
-                                style: TextStyle(
-                                  fontSize: textFontSize,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                child: AnimatedTextKit(
-                                  animatedTexts: [
-                                    ColorizeAnimatedText(
-                                      'Bienvenido a AlphaApp',
-                                      textAlign: TextAlign.center,
-                                      textStyle: TextStyle(
-                                        fontSize: textFontSize,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Roboto',
-                                      ),
-                                      colors: [
-                                        Color(0xFF0D47A1),
-                                        Color(0xFF1565C0),
-                                        Color(0xFF64B5F6),
-                                        Color(0xFF9CA3AF),
-                                      ],
-                                      speed: Duration(milliseconds: 400),
-                                    ),
-                                  ],
-                                  repeatForever: true,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: Image.asset(
+                        'assets/images/LogoAlphaAppPagInicio.png',
+                        width: logoSize,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 30),
+                    DefaultTextStyle(
+                      style: const TextStyle(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText('Bienvenido a AlphaApp'),
+                          TypewriterAnimatedText('Gestión inteligente'),
+                          TypewriterAnimatedText('Tu negocio, bajo control'),
+                        ],
+                        repeatForever: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
+
+              // --- SECCIÓN DE TARJETAS ---
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Accesos rápidos",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: screenWidth > 600 ? 4 : 2,
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                      children: [
+                        _buildQuickCard(
+                          Icons.calendar_month, 
+                          "Mi Agenda", 
+                          _irAlDashboard,
+                          
+                        ),
+                        _buildQuickCard(
+                          Icons.search, 
+                          "Reservas", 
+                          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ReservaPage())),
+                        ),
+                        _buildQuickCard(
+                          Icons.info_outline, 
+                          "Información", 
+                          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ServicePage())),
+                        ),
+                        _buildQuickCard(
+                          Icons.person_outline, 
+                          "Mi Perfil", 
+                          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const profile_page())),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickCard(IconData icon, String title, VoidCallback onTap, {bool isLoading = false}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                isLoading 
+                  ? const SizedBox(
+                      width: 24, 
+                      height: 24, 
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                    )
+                  : Icon(icon, size: 32, color: Colors.blueAccent),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
