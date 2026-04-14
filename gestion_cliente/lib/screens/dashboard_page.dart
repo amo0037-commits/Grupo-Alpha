@@ -21,13 +21,28 @@ class _DashboardPageState extends State<DashboardPage>
   late TabController _tabController;
   int _currentIndex = 0;
 
-  final Map<String, String> rutasServicios = const {
-    'Gimnasio': '/gimnasio',
-    'Centro de Yoga': '/yoga',
-    'Peluqueria': '/peluqueria',
-    'Centro de Fisioterapia': '/fisioterapia',
-    'Academia': '/academia',
-  };
+ final Map<String, Map<String, String>> rutasServicios = const {
+  'Gimnasio': {
+    'ruta': '/gimnasio',
+    'servicio': 'Gimnasio',
+  },
+  'Centro de Yoga': {
+    'ruta': '/yoga',
+    'servicio': 'Centro de Yoga',
+  },
+  'Peluqueria': {
+    'ruta': '/peluqueria',
+    'servicio': 'Peluqueria',
+  },
+  'Centro de Fisioterapia': {
+    'ruta': '/fisioterapia',
+    'servicio': 'Centro de Fisioterapia',
+  },
+  'Academia': {
+    'ruta': '/academia',
+    'servicio': 'Academia',
+  },
+};
 
   final Map<String, bool> _hoveringServicios = {};
 
@@ -87,15 +102,20 @@ class _DashboardPageState extends State<DashboardPage>
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
-            onTap: () {
-              final ruta = rutasServicios[negocio];
-              if (ruta != null) {
-                Navigator.pushNamed(context, ruta, arguments: {
-                  'userId': FirebaseAuth.instance.currentUser!.uid,
-                  'negocio': negocio,
-                });
+           onTap: () {
+              final data = rutasServicios[negocio];
+              if (data != null) {
+                Navigator.pushNamed(
+                  context,
+                  data['ruta']!,
+                  arguments: {
+                    'userId': FirebaseAuth.instance.currentUser!.uid,
+                    'negocio': data['servicio'],
+                  },
+                );
               }
             },
+
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
               leading: CircleAvatar(
