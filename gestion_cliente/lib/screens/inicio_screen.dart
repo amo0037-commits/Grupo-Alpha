@@ -240,13 +240,13 @@ class _PaginaInicioState extends State<PaginaInicio>
                       height: 24, 
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
                     )
-                  : Icon(icon, size: 32, color: Colors.blueAccent),
+                  : Icon(icon, size: 46, color: Colors.blueAccent), // Tamaño del icono de las tarjetas
                 const SizedBox(height: 12),
                 Text(
                   title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 22, // Tamaño del texto de las tarjetas
                     fontWeight: FontWeight.w500,
                   ),
                 ),
