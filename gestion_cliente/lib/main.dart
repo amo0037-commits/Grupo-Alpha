@@ -38,7 +38,7 @@ class AlphaApp extends StatelessWidget {
       title: 'AlphaApp',
       debugShowCheckedModeBanner: false,
       theme: AppThemes.inicioTheme,
-      home: const SplashScreen(),
+      home: const  YogaPage(),
       
       routes: {
         // Autenticación
