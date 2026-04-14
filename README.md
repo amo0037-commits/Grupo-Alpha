@@ -11,3 +11,14 @@
   ### Se ajusta y modifica  la rama main de gestion_cliente 
   ### Creación y reparto de primeras clases en distintos  screens (inicio, login, register)
   ### Se ajustan y modifican  diversos elementos graficos.
+  ### Creación screen Pagina Reserva
+  ### Modificación de valores de padding de login y register
+  ### Modificación Pagina inicio para añadir el boton que lleva a la Pagina Reserva
+
+  ## 25/03/26
+
+
+  ### Problema con visualizado de los textfields de login, register y reserve (PENDIENTE DE SOLUCION)
+  ### Modificacion de la pagina reserva para añadir mas campos 
+
+ 
