@@ -165,7 +165,7 @@ class _PaginaInicioState extends State<PaginaInicio>
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const profile_page()),
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
                 );
               },
             ),

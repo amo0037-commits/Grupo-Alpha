@@ -1,162 +1,379 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+  import 'package:flutter/foundation.dart';
+  import 'package:flutter/material.dart';
+  import 'package:firebase_auth/firebase_auth.dart';
+  import 'package:cloud_firestore/cloud_firestore.dart';
+  import 'package:gestion_cliente/screens/login_screen.dart';
+  import 'package:image_picker/image_picker.dart'; 
+  import 'package:firebase_storage/firebase_storage.dart';
+  import 'package:cached_network_image/cached_network_image.dart';
+  import 'package:crop_your_image/crop_your_image.dart';
 
+  class ProfilePage extends StatefulWidget {
+    const ProfilePage({super.key});
 
+    @override
+    State<ProfilePage> createState() => _ProfilePageState();
+  }
 
-class profile_page extends StatelessWidget {
-  const profile_page({super.key});
-  
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
-  
-@override
+  @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mi Perfil'),
-        centerTitle: true,
-        elevation: 0,
-        foregroundColor: Colors.black,
-        // 1. Quitamos el backgroundColor sólido y usamos flexibleSpace
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,   // Inicia a la izquierda
-              end: Alignment.centerRight,    // Termina a la derecha
-              colors: [
-                Color(0xFF9CA3AF),           // Color gris original
-                Color(0xFF4B5563),           // Color azul claro
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasData) {
+          return const ProfilePage(); // o HomePage
+        } else {
+          return const LoginPage();
+        }
+      },
+    );
+  }
+}
+
+  class _ProfilePageState extends State<ProfilePage> {
+    Uint8List? _localImageBytes;
+    
+    final CropController _cropController = CropController();
+    Uint8List? _imageToCrop;
+    Widget _buildAvatar(String? photoUrl) {
+    // Mostrar imagen guardada en Firebase SIEMPRE
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        key: ValueKey(photoUrl),
+        imageUrl: photoUrl,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // Solo fallback si aún no hay nada en Firestore
+    if (_localImageBytes != null) {
+      return Image.memory(
+        _localImageBytes!,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      );
+    }
+
+
+    return const Icon(Icons.person, size: 50, color: Colors.white);
+  }
+
+    
+    
+
+    void _showImagePickerOptions(String uid) {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) {
+          return SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text("Galería"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(uid, ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text("Cámara"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(uid, ImageSource.camera);
+                  },
+                ),
               ],
+            ),
+          );
+        },
+      );
+    }
+
+  Future<void> _uploadCroppedImage(String uid, Uint8List image) async {
+    
+    debugPrint("🟡 INICIO upload");
+
+    debugPrint("UID usado: $uid");
+    debugPrint("UID auth: ${FirebaseAuth.instance.currentUser?.uid}");
+
+    debugPrint("📦 Bytes imagen: ${image.lengthInBytes}");
+
+    final fileName =
+        '${uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    final ref = FirebaseStorage.instance
+      .ref()
+      .child('profile_images')
+      .child(fileName);
+
+      try {
+      debugPrint("🚀 Subiendo imagen a Storage...");
+
+      final uploadTask = ref.putData(
+        image,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      await uploadTask.timeout(
+        const Duration(seconds: 20),
+        onTimeout: () {
+          throw Exception("⏱ Timeout subiendo imagen a Storage");
+        },
+      );
+
+      debugPrint("✅ Imagen subida a Storage");
+
+      final url = await ref.getDownloadURL();
+
+      debugPrint("🔗 URL original: $url");
+
+      final updatedUrl =
+          "$url?v=${DateTime.now().millisecondsSinceEpoch}";
+
+      debugPrint("🔗 URL final: $updatedUrl");
+
+      debugPrint("💾 Guardando en Firestore...");
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .set(
+            {'photoUrl': updatedUrl},
+            SetOptions(merge: true),
+          );
+
+      debugPrint("✅ Guardado en Firestore OK");
+
+      if (mounted) {
+        setState(() {
+          _localImageBytes = image;
+        });
+      }
+
+      debugPrint("🏁 FIN upload exitoso");
+    } catch (e) {
+      debugPrint("❌ ERROR en upload: $e");
+    }
+  }
+
+
+  Future<void> _pickImage(String uid, ImageSource source) async {
+    final picker = ImagePicker();
+
+    try {
+      final pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 70,
+      );
+
+      if (pickedFile == null) return;
+
+      final Uint8List imageBytes = await pickedFile.readAsBytes();
+
+      setState(() {
+        _imageToCrop = imageBytes;
+      });
+
+
+      _showCropDialog(uid);
+
+    } catch (e) {
+      debugPrint("Error: $e");
+    }
+  }
+
+  void _showCropDialog(String uid) {
+    if (_imageToCrop == null) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 400,
+                child:Crop(
+                        image: _imageToCrop!,
+                        controller: _cropController,
+                        aspectRatio: 1,
+                        withCircleUi: true, // 👈 opcional pero recomendable
+                        onCropped: (cropped) async {
+                        debugPrint("📸 onCropped ejecutado"); // 🔥 DEBUG
+
+                if (cropped == null) return;
+
+                Navigator.pop(context);
+
+                setState(() {
+                _localImageBytes = cropped;
+                });
+
+              await _uploadCroppedImage(uid, cropped);
+    },
+  ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                      onPressed: () {
+                        debugPrint("🟡 Botón Guardar presionado"); // 🔥 DEBUG
+                        _cropController.crop();
+                  },
+                    child: const Text("Guardar"),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancelar"),
+                  ),
+                ],
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+    @override
+    Widget build(BuildContext context) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return const Scaffold(body: Center(child: Text("Usuario no autenticado")));
+
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Mi Perfil'),
+          centerTitle: true,
+          elevation: 0,
+          foregroundColor: Colors.black,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
+              ),
             ),
           ),
         ),
-      ),
-      
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,    // Inicia arriba
-            end: Alignment.bottomCenter, // Termina abajo
-            colors: [
-              Color(0xFFE0E3E7), // Color claro arriba
-              Color(0xFF64B5F6), // El azul oscuro que tenías abajo
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF64B5F6), Color(0xFFE0E3E7)],
+                  ),
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+                ),
+                padding: const EdgeInsets.only(bottom: 30),
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+                  builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                  return const Center(
+                  child: Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: CircularProgressIndicator(),
+            ),
+          );
+    }
+
+                  var data = snapshot.data!.data() as Map<String, dynamic>?;
+
+                  if (data == null) {
+                  return const Text("Sin datos de usuario");
+    }
+
+                    String nombre = data['nombre'] ?? "Usuario";
+                    String apellido = data['apellidos'] ?? "";
+                    String email = data['email'] ?? "email";
+                    String? photoUrl = data['photoUrl'];
+
+                    return Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        GestureDetector(
+                        onTap: () => _showImagePickerOptions(user.uid),
+                      child: CircleAvatar(
+                        radius: 50,
+                          backgroundColor: const Color(0xFF64B5F6),
+                              child: ClipOval(
+                            child: _buildAvatar(photoUrl),
+                            ),
+                            ),
+                            ),
+                        const SizedBox(height: 15),
+                        Text("$nombre $apellido".trim(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                        Text(email, 
+                        style: TextStyle(color: Colors.grey[600]),)
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    _buildOption(Icons.person_outline, "Editar Información"),
+                    _buildOption(Icons.notifications_none, "Notificaciones"), _buildOption(Icons.lock_outline, "Privacidad"), _buildOption(Icons.help_outline, "Ayuda y Soporte"), const Divider(height: 40),
+                  _buildOption(
+                    Icons.logout,
+                      "Cerrar Sesión",
+                        isDestructive: true,
+                        onTap: () async {
+                  await FirebaseAuth.instance.signOut();
+            },
+          ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-        
-        child: Column(
-        children: [
-          // Sección de Cabecera
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient (
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              colors: [
-               Color(0xFF64B5F6),
-               Color(0xFFE0E3E7),
-               ],
-              ),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-            ),
-            padding: const EdgeInsets.only(bottom: 30),
-            child: Column(
-              children: [
-                const SizedBox(height: 15,),
-                const SizedBox(height: 15),
-               FutureBuilder<DocumentSnapshot>(
-  future: FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .get(),
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const CircularProgressIndicator();
+      );
     }
 
-    if (!snapshot.hasData || !snapshot.data!.exists) {
-      return const Text("No hay datos");
-    }
-
-    var data = snapshot.data!.data() as Map<String, dynamic>;
-
-    String nombre = data['nombre'] ?? "Nombre de Usuario";
-    String apellido = data['apellidos'] ?? "Nombre de Usuario";
-    String email = data['email'] ?? user.email ?? "";
-
-    String iniciales = "";
-            if (nombre.isNotEmpty) iniciales += nombre[0].toUpperCase();
-            if (apellido.isNotEmpty) iniciales += apellido[0].toUpperCase();
-            if (iniciales.isEmpty) iniciales = "U"; // "U" de Usuario por defecto
-
-    return Column(
-      children: [
-        CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Color(0xFF64B5F6),
-                        child: Text(
-                          iniciales,
-                          style: const TextStyle(
-                            fontSize: 35,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-        Text(
-        [nombre, apellido].where((e) => e.isNotEmpty).join(" "),
-        style: const TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-        ),
-      ),
-
-        Text(
-          email,
-          style: TextStyle(color: Colors.grey[600]),
-        ),
-      ],
-    );
-  },
-)
-              ],
-                ),
-          ),
-              
-    
-
-          const SizedBox(height: 20),
-
-
-          // Sección de Opciones
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: [
-                _buildOption(Icons.person_outline, "Editar Información"),
-                _buildOption(Icons.notifications_none, "Notificaciones"),
-                _buildOption(Icons.lock_outline, "Privacidad"),
-                _buildOption(Icons.help_outline, "Ayuda y Soporte"),
-                const Divider(height: 40),
-                _buildOption(Icons.logout, "Cerrar Sesión", isDestructive: true),
-              ],
-            ),
-          ),
-          ],
-    ),
-      ),
-    );
-     
-  }
-
-  // Widget auxiliar para no repetir código de los botones
-  Widget _buildOption(IconData icon, String title, {bool isDestructive = false}) {
+  Widget _buildOption(
+    IconData icon,
+    String title, {
+    bool isDestructive = false,
+    VoidCallback? onTap,
+  }) {
     final color = isDestructive ? Colors.red : Colors.black87;
-    
+
     return ListTile(
       leading: Icon(icon, color: color),
       title: Text(
@@ -164,10 +381,7 @@ class profile_page extends StatelessWidget {
         style: TextStyle(color: color, fontWeight: FontWeight.w500),
       ),
       trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-      onTap: () {
-        // Aquí iría la navegación
-      },
+      onTap: onTap, // 👈 IMPORTANTE
     );
   }
-}
-  
+  }
