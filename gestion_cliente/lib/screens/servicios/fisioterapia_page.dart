@@ -31,12 +31,18 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
   final List<String> especialistas = [
     'Especialista 1',
     'Especialista 2',
-    'Especialista 3'
+    'Especialista 3',
   ];
 
   final List<String> horariosTotales = [
-    '09:30','10:30','11:30','12:30','13:30',
-    '16:30','17:30','18:30'
+    '09:30',
+    '10:30',
+    '11:30',
+    '12:30',
+    '13:30',
+    '16:30',
+    '17:30',
+    '18:30',
   ];
 
   @override
@@ -48,89 +54,95 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
   }
 
   Future<void> _fetchBlockedDays() async {
-  final snapshot = await FirebaseFirestore.instance
-      .collection('reservas')
-      .where('servicio', isEqualTo: widget.negocio)
-      .where('estado', isEqualTo: 'activa')
-      .get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('reservas')
+        .where('servicio', isEqualTo: widget.negocio)
+        .where('estado', isEqualTo: 'activa')
+        .get();
 
-  Map<DateTime, int> contador = {};
+    Map<DateTime, int> contador = {};
 
-  for (var doc in snapshot.docs) {
-    DateTime fecha = (doc['fecha'] as Timestamp).toDate();
-    DateTime day = DateTime(fecha.year, fecha.month, fecha.day);
+    for (var doc in snapshot.docs) {
+      DateTime fecha = (doc['fecha'] as Timestamp).toDate();
+      DateTime day = DateTime(fecha.year, fecha.month, fecha.day);
 
-    contador[day] = (contador[day] ?? 0) + 1;
+      contador[day] = (contador[day] ?? 0) + 1;
+    }
+
+    if (mounted) {
+      setState(() {
+        _reservasPorDia = contador;
+        _blockedDays = contador.keys.toList();
+      });
+    }
   }
 
-  if (mounted) {
-    setState(() {
-      _reservasPorDia = contador;
-      _blockedDays = contador.keys.toList();
-    });
-  }
-}
+  Future<void> _actualizarHorasDisponibles() async {
+    if (_selectedDay == null || _especialistaSeleccionado.isEmpty) return;
 
- Future<void> _actualizarHorasDisponibles() async {
-  if (_selectedDay == null || _especialistaSeleccionado.isEmpty) return;
+    setState(() => _loading = true);
 
-  setState(() => _loading = true);
+    final isSaturday = _selectedDay!.weekday == DateTime.saturday;
+    final isSunday = _selectedDay!.weekday == DateTime.sunday;
 
-  final isSaturday = _selectedDay!.weekday == DateTime.saturday;
-  final isSunday = _selectedDay!.weekday == DateTime.sunday;
-
-  if (isSunday) {
-    setState(() {
-      _horasDisponibles = [];
-      _loading = false;
-    });
-    return;
-  }
-
-  DateTime fecha = DateTime(
-    _selectedDay!.year,
-    _selectedDay!.month,
-    _selectedDay!.day,
-  );
-
-  final snapshot = await FirebaseFirestore.instance
-      .collection('reservas')
-      .where('servicio', isEqualTo: widget.negocio)
-      .where('fecha', isEqualTo: Timestamp.fromDate(fecha))
-      .where('clase', isEqualTo: _especialistaSeleccionado)
-      .where('estado', isEqualTo: 'activa')
-      .get();
-
-  List<String> ocupadas = snapshot.docs.map((e) => e['hora'] as String).toList();
-
-  List<String> disponibles = List.from(horariosTotales);
-
- 
-  if (isSaturday) {
-    disponibles = disponibles.where((h) => int.parse(h.split(':')[0]) < 14).toList();
-
-    if (!['Especialista 4', 'Especialista 5'].contains(_especialistaSeleccionado)) {
+    if (isSunday) {
       setState(() {
         _horasDisponibles = [];
         _loading = false;
       });
-      _mostrar('Sábados solo Especialista 4 y 5');
       return;
     }
-  }
 
-  disponibles = disponibles.where((h) => !ocupadas.contains(h)).toList();
+    DateTime fecha = DateTime(
+      _selectedDay!.year,
+      _selectedDay!.month,
+      _selectedDay!.day,
+    );
 
-  setState(() {
-    _horasDisponibles = disponibles;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('reservas')
+        .where('servicio', isEqualTo: widget.negocio)
+        .where('fecha', isEqualTo: Timestamp.fromDate(fecha))
+        .where('clase', isEqualTo: _especialistaSeleccionado)
+        .where('estado', isEqualTo: 'activa')
+        .get();
 
-    if (!_horasDisponibles.contains(_horaSeleccionada)) {
-      _horaSeleccionada = '';
+    List<String> ocupadas = snapshot.docs
+        .map((e) => e['hora'] as String)
+        .toList();
+
+    List<String> disponibles = List.from(horariosTotales);
+
+    if (isSaturday) {
+      disponibles = disponibles
+          .where((h) => int.parse(h.split(':')[0]) < 14)
+          .toList();
+
+      if (![
+        'Especialista 4',
+        'Especialista 5',
+      ].contains(_especialistaSeleccionado)) {
+        setState(() {
+          _horasDisponibles = [];
+          _loading = false;
+        });
+        _mostrar('Sábados solo Especialista 4 y 5');
+        return;
+      }
     }
 
-    _loading = false;
-  });
-}
+    disponibles = disponibles.where((h) => !ocupadas.contains(h)).toList();
+
+    setState(() {
+      _horasDisponibles = disponibles;
+
+      if (!_horasDisponibles.contains(_horaSeleccionada)) {
+        _horaSeleccionada = '';
+      }
+
+      _loading = false;
+    });
+  }
 
   Future<void> _reservar() async {
     if (_selectedDay == null ||
@@ -237,7 +249,7 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
             ),
           ),
         ),
@@ -277,7 +289,9 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.7),
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.white.withOpacity(0.4)),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.4),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.08),
@@ -302,7 +316,7 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
                         },
                         headerStyle: const HeaderStyle(
                           formatButtonVisible: false,
-                          titleCentered: true,        
+                          titleCentered: true,
                         ),
                         enabledDayPredicate: (day) {
                           return day.weekday != DateTime.sunday;
@@ -312,14 +326,29 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
                             color: Color(0xFF5E3B8C), // morado oscuro elegante
                             fontWeight: FontWeight.w600,
                           ),
+
                           weekendStyle: TextStyle(
                             color: Color.fromARGB(221, 126, 117, 117),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        calendarStyle: const CalendarStyle(
+                          todayDecoration: BoxDecoration(
+                            color: Color(0xFF9575CD),
+                            shape: BoxShape.circle,
+                          ),
+                          selectedDecoration: BoxDecoration(
+                            color:Colors.blueAccent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                         calendarBuilders: CalendarBuilders(
                           markerBuilder: (context, date, events) {
-                            final day = DateTime(date.year, date.month, date.day);
+                            final day = DateTime(
+                              date.year,
+                              date.month,
+                              date.day,
+                            );
                             final count = _reservasPorDia[day] ?? 0;
 
                             if (count == 0) return null;
@@ -345,7 +374,11 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
                             );
                           },
                           disabledBuilder: (context, date, focusedDay) {
-                            final day = DateTime(date.year, date.month, date.day);
+                            final day = DateTime(
+                              date.year,
+                              date.month,
+                              date.day,
+                            );
 
                             final count = _reservasPorDia[day] ?? 0;
 
@@ -368,7 +401,7 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
                       ),
                     ),
 
-                         const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
                     // ESPECIALISTA
                     Container(
@@ -540,7 +573,11 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
                         child: Ink(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
+                              colors: [
+                                Color(0xFF1E293B),
+                                Color(0xFF334155),
+                                Color(0xFF64B5F6),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
