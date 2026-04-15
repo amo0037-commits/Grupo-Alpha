@@ -71,7 +71,409 @@ class AuthGate extends StatelessWidget {
   }
 
     
-    
+    void _showEditDialog(String uid) async {
+  final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+  final data = doc.data() ?? {};
+
+  final nombreController = TextEditingController(text: data['nombre'] ?? "");
+  final apellidoController = TextEditingController(text: data['apellidos'] ?? "");
+  final fechaController = TextEditingController(text: data['fechaNacimiento'] ?? "");
+  final emailController = TextEditingController(text: data['email'] ?? "");
+  final telefonoController = TextEditingController(text: data['telefono'] ?? "");
+  final direccionController = TextEditingController(text: data['direccion'] ?? "");
+
+  final List<String> serviciosDisponibles = [
+   'Gimnasio'
+   'Academia'
+   'Fisioterapia'
+   'Yoga'
+   'Peluqueria'
+];
+  
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Editar Información"),
+       content: SingleChildScrollView(
+  child: Padding(
+    padding: const EdgeInsets.all(10),
+    child: Column(
+      children: [
+        TextField(
+          controller: nombreController,
+          decoration: const InputDecoration(
+            labelText: "Nombre",
+            prefixIcon: Icon(Icons.person),
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        TextField(
+          controller: apellidoController,
+          decoration: const InputDecoration(
+            labelText: "Apellidos",
+            prefixIcon: Icon(Icons.person_outline),
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        TextField(
+          controller: telefonoController,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            labelText: "Teléfono",
+            prefixIcon: Icon(Icons.phone),
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        TextField(
+          controller: direccionController,
+          decoration: const InputDecoration(
+            labelText: "Dirección",
+            prefixIcon: Icon(Icons.location_on),
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        TextField(
+          controller: fechaController,
+          readOnly: true,
+          decoration: const InputDecoration(
+            labelText: "Fecha de nacimiento",
+            prefixIcon: Icon(Icons.calendar_today),
+          ),
+          onTap: () async {
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime(2000),
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+            );
+
+            if (pickedDate != null) {
+              fechaController.text =
+                  "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+            }
+          },
+        ),
+      ],
+    ),
+  ),
+),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _saveUserData(
+                uid,
+                nombreController.text,
+                apellidoController.text,
+                fechaController.text,
+                telefonoController.text,
+                direccionController.text,
+              );
+
+              Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+               content: Row(
+               children: const [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 10),
+                  Text("Datos actualizados correctamente"),
+                ],
+              ),
+                backgroundColor: Colors.green,
+          )
+                );
+            },
+            child: const Text("Guardar"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+    void _showNotificationDialog(String uid) async {
+  final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+  final data = doc.data() ?? {};
+
+  bool notificacionesActivas = data['notificaciones'] ?? true;
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            title: const Text("Notificaciones"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SwitchListTile(
+                  title: const Text("Activar notificaciones"),
+                  secondary: const Icon(Icons.notifications),
+                  value: notificacionesActivas,
+                  onChanged: (value) {
+                    setStateDialog(() {
+                      notificacionesActivas = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancelar"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(uid)
+                      .set(
+                    {
+                      'notificaciones': notificacionesActivas,
+                    },
+                    SetOptions(merge: true),
+                  );
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        notificacionesActivas
+                            ? "🔔 Notificaciones activadas"
+                            : "🔕 Notificaciones desactivadas",
+                      ),
+                    ),
+                  );
+                },
+                child: const Text("Guardar"),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+    void _showHelpDialog(String uid) {
+  final mensajeController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Ayuda y Soporte"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              const Text(
+                "¿Tienes algún problema o necesitas ayuda? Escríbenos:",
+                style: TextStyle(fontSize: 14),
+              ),
+
+              const SizedBox(height: 15),
+
+              TextField(
+                controller: mensajeController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: "Escribe tu mensaje",
+                  prefixIcon: Icon(Icons.message),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (mensajeController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("⚠️ Escribe un mensaje"),
+                  ),
+                );
+                return;
+              }
+
+              await _sendSupportMessage(uid, mensajeController.text);
+
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("✅ Mensaje enviado correctamente"),
+                ),
+              );
+            },
+            child: const Text("Enviar"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showNegociosDialog(String uid) async {
+  final doc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .get();
+
+  final data = doc.data();
+  if (data == null) return;
+
+  final List<String> serviciosDisponibles = [
+    "Gimnasio",
+    "Academia",
+    "Fisioterapia",
+    "Yoga",
+    "Peluqueria",
+  ];
+
+  final List<String> negocios =
+      List<String>.from(data['negocios'] ?? []);
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            title: const Text("Mis servicios"),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 500,
+              child: ListView(
+                children: [
+                  const Text(
+                    "Activos",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+
+                  if (negocios.isEmpty)
+                    const Text("No tienes servicios activos"),
+
+                  ...negocios.map((servicio) {
+                    return Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.store, color: Colors.green),
+                        title: Text(servicio),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.remove_circle, color: Colors.red),
+                          onPressed: () async {
+                            setStateDialog(() {
+                              negocios.remove(servicio);
+                            });
+
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(uid)
+                                .set({
+                              'negocios': negocios
+                            }, SetOptions(merge: true));
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("❌ '$servicio' dado de baja"),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    "Disponibles",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+
+                  ...serviciosDisponibles.map((servicio) {
+                    final yaActivo = negocios.contains(servicio);
+
+                    return Card(
+                      child: ListTile(
+                        leading: Icon(
+                          yaActivo ? Icons.check_circle : Icons.add_circle,
+                          color: yaActivo ? Colors.green : Colors.grey,
+                        ),
+                        title: Text(servicio),
+                        subtitle: Text(yaActivo ? "Activo" : "Disponible"),
+                        trailing: SizedBox(
+  width: 100,
+  child: ElevatedButton(
+    onPressed: yaActivo
+    ? null
+    : () async {
+        setStateDialog(() {
+          negocios.add(servicio);
+        });
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .set(
+              {'negocios': negocios},
+              SetOptions(merge: true),
+            );
+
+        // ✅ MENSAJE DE CONFIRMACIÓN
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("✅ Te has dado de alta en '$servicio'"),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+    child: Text(yaActivo ? "Activo" : "Alta"),
+  ),
+),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cerrar"),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
 
     void _showImagePickerOptions(String uid) {
       showModalBottomSheet(
@@ -105,6 +507,47 @@ class AuthGate extends StatelessWidget {
         },
       );
     }
+
+
+    Future<void> _saveUserData(
+          String uid,
+          String nombre,
+          String apellidos,
+          String fechaNacimiento,
+          String telefono,
+          String direccion,
+      ) async {
+          try {
+            await FirebaseFirestore.instance.collection('users').doc(uid).set(
+      {
+        'nombre': nombre,
+        'apellidos': apellidos,
+        'fechaNacimiento': fechaNacimiento,
+        'telefono': telefono,
+        'direccion': direccion,
+      },
+      SetOptions(merge: true),
+    );
+
+    debugPrint("✅ Datos actualizados correctamente");
+  } catch (e) {
+    debugPrint("❌ Error guardando datos: $e");
+  }
+}
+
+  Future<void> _sendSupportMessage(String uid, String mensaje) async {
+  try {
+    await FirebaseFirestore.instance.collection('soporte').add({
+      'uid': uid,
+      'mensaje': mensaje,
+      'fecha': FieldValue.serverTimestamp(),
+    });
+
+    debugPrint("✅ Mensaje enviado a soporte");
+  } catch (e) {
+    debugPrint("❌ Error enviando mensaje: $e");
+  }
+}
 
   Future<void> _uploadCroppedImage(String uid, Uint8List image) async {
     
@@ -317,6 +760,8 @@ class AuthGate extends StatelessWidget {
 
                     String nombre = data['nombre'] ?? "Usuario";
                     String apellido = data['apellidos'] ?? "";
+                    String telefono = data['telefono'] ?? "";
+                    String direccion = data['direccion'] ?? "";
                     String email = data['email'] ?? "email";
                     String? photoUrl = data['photoUrl'];
 
@@ -347,8 +792,32 @@ class AuthGate extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
-                    _buildOption(Icons.person_outline, "Editar Información"),
-                    _buildOption(Icons.notifications_none, "Notificaciones"), _buildOption(Icons.lock_outline, "Privacidad"), _buildOption(Icons.help_outline, "Ayuda y Soporte"), const Divider(height: 40),
+                  _buildOption(
+                    Icons.person_outline,
+                     "Editar Información",
+                       onTap: () => _showEditDialog(user.uid),
+            ),
+                 _buildOption(
+                     Icons.notifications_none,
+                      "Notificaciones",
+                        onTap: () => _showNotificationDialog(user.uid),
+            ),
+                  _buildOption(
+                    Icons.build_outlined,
+                      "Servicios",
+                         onTap: () {
+  debugPrint("🟢 Abriendo servicios");
+  _showNegociosDialog(user.uid);
+},
+            ), 
+                   
+                   _buildOption(
+                      Icons.help_outline,
+                        "Ayuda y Soporte",
+                            onTap: () => _showHelpDialog(user.uid),
+            ),
+
+                    const Divider(height: 40),
                   _buildOption(
                     Icons.logout,
                       "Cerrar Sesión",
