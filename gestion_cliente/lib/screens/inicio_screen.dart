@@ -8,7 +8,6 @@ import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
 import 'package:gestion_cliente/screens/profile_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class PaginaInicio extends StatefulWidget {
   const PaginaInicio({super.key});
@@ -21,8 +20,6 @@ class _PaginaInicioState extends State<PaginaInicio>
     with SingleTickerProviderStateMixin {
   late AnimationController _logoController;
   late Animation<double> _logoAnim;
-  
-  //Declarar la variable de estado para la carga
   bool _isLoadingDashboard = false;
 
   @override
@@ -31,12 +28,12 @@ class _PaginaInicioState extends State<PaginaInicio>
 
     _logoController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
     );
 
     _logoAnim = Tween<double>(
-      begin: 0.97, // valor base móvil
-      end: 1.03,   // valor máximo móvil
+      begin: 0.95,
+      end: 1.05,
     ).chain(CurveTween(curve: Curves.easeInOut)).animate(_logoController);
 
     _logoController.repeat(reverse: true);
@@ -50,7 +47,6 @@ class _PaginaInicioState extends State<PaginaInicio>
 
   Future<void> _irAlDashboard() async {
     setState(() => _isLoadingDashboard = true);
-
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -91,125 +87,170 @@ class _PaginaInicioState extends State<PaginaInicio>
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    // Ajuste de tamaño del logo
     double logoSize = screenWidth < 600
-        ? screenWidth * 0.9
-        : min(screenWidth * 0.4, 800);
-
-    // Ajuste de animación según tamaño de pantalla
-    double scaleBegin = screenWidth < 600 ? 0.97 : 0.93;
-    double scaleEnd = screenWidth < 600 ? 1.03 : 1.07;
-
-    // Solo se actualiza Tween si cambió la pantalla
-    _logoAnim = Tween<double>(begin: scaleBegin, end: scaleEnd)
-        .chain(CurveTween(curve: Curves.easeInOut))
-        .animate(_logoController);
+        ? screenWidth * 0.7
+        : min(screenWidth * 0.3, 400);
 
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+          colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          titleSpacing: 0,
-          centerTitle: false,
-          toolbarHeight: 100,
-          title: SizedBox(
-            height: 80,
-            child: Image.asset(
-              'assets/images/LogoAlphaAppPagInicio.png',
-              height: 165,
-              fit: BoxFit.contain,
-            ),
-          ),
+          elevation: 0,
+          toolbarHeight: 100, // Altura generosa para el logo
           backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
-              ),
+          leadingWidth: screenWidth * 0.5, // Le damos más espacio al logo
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10),
+            child: Image.asset(
+              'assets/images/Icono_AlphaApp.png',
+              fit: BoxFit.contain,
+              alignment: Alignment.centerLeft,
             ),
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.logout, size: min(max(screenWidth * 0.07, 24), 50)),
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-              },
+              icon: const Icon(Icons.logout, color: Colors.white70),
+              onPressed: () => FirebaseAuth.instance.signOut(),
             ),
-            IconButton(
-              icon: Icon(Icons.search, size: min(max(screenWidth * 0.07, 24), 50)),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReservaPage()),
-                );
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.info, size: min(max(screenWidth * 0.07, 24), 50)),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ServicePage()),
-                );
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.person, size: min(max(screenWidth * 0.07, 24), 50)),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const profile_page()),
-                );
-              },
-            ),
-        
-            
-            _isLoadingDashboard 
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Center(
-                    child: SizedBox(
-                      width: 20, 
-                      height: 20, 
-                      child: CircularProgressIndicator(
-                        color: Colors.white, 
-                        strokeWidth: 2
+          ],
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              // --- SECCIÓN HERO ---
+              SizedBox(
+                height: screenHeight * 0.5,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _logoAnim,
+                      builder: (context, child) => Transform.scale(
+                        scale: _logoAnim.value,
+                        child: child,
+                      ),
+                      child: Image.asset(
+                        'assets/images/LogoAlphaAppPagInicio.png',
+                        width: logoSize,
                       ),
                     ),
-                  ),
-                )
-              : IconButton(
-                  icon: Icon(Icons.calendar_month_outlined, size: min(max(screenWidth * 0.07, 24), 50)),
-                  onPressed: _irAlDashboard,
-                ),
-            ],
-        ),
-      
-        body: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: screenHeight),
-            child: Center(
-              child: AnimatedBuilder(
-                animation: _logoAnim,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _logoAnim.value,
-                    child: child,
-                  );
-                },
-                child: Image.asset(
-                  'assets/images/LogoAlphaAppPagInicio.png',
-                  width: logoSize,
-                  fit: BoxFit.contain,
+                    const SizedBox(height: 30),
+                    DefaultTextStyle(
+                      style: const TextStyle(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText('Bienvenido a AlphaApp'),
+                          TypewriterAnimatedText('Gestión inteligente'),
+                          TypewriterAnimatedText('Tu negocio, bajo control'),
+                        ],
+                        repeatForever: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              // --- SECCIÓN DE TARJETAS ---
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Accesos rápidos",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: screenWidth > 600 ? 4 : 2,
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                      children: [
+                        _buildQuickCard(
+                          Icons.calendar_month, 
+                          "Mi Agenda", 
+                          _irAlDashboard,
+                          
+                        ),
+                        _buildQuickCard(
+                          Icons.search, 
+                          "Reservas", 
+                          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ReservaPage())),
+                        ),
+                        _buildQuickCard(
+                          Icons.info_outline, 
+                          "Información", 
+                          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ServicePage())),
+                        ),
+                        _buildQuickCard(
+                          Icons.person_outline, 
+                          "Mi Perfil", 
+                          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const profile_page())),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickCard(IconData icon, String title, VoidCallback onTap, {bool isLoading = false}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                isLoading 
+                  ? const SizedBox(
+                      width: 24, 
+                      height: 24, 
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                    )
+                  : Icon(icon, size: 46, color: Colors.blueAccent), // Tamaño del icono de las tarjetas
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22, // Tamaño del texto de las tarjetas
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -217,5 +258,3 @@ class _PaginaInicioState extends State<PaginaInicio>
     );
   }
 }
-
-
