@@ -102,7 +102,7 @@ class _RegisterPageState extends State<RegisterPage> {
           colors: [
             Color(0xFF1E293B),
             Color(0xFF334155),
-            Color(0xFF64B5F6), // 🔥 MISMO AZUL DEL HOME
+            Color(0xFF64B5F6), 
           ],
         ),
       ),

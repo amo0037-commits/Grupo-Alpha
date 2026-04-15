@@ -339,6 +339,7 @@ class _DashboardPageState extends State<DashboardPage>
               child: SizedBox(
                 width: screenWidth > 800 ? 500 : screenWidth * 0.95,
                 child: Card(
+                  color: const Color(0xFF93C5FD),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
