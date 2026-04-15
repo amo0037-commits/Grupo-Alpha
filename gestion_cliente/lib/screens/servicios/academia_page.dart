@@ -235,7 +235,9 @@ class _AcademiaPageState extends State<AcademiaPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFF5F5F5), Color(0xFFF57C00)],
+            colors: [  Color(0xFFF5F5F5),
+  Color(0xFFFFB74D), 
+  Color(0xFFF57C00), ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -317,9 +319,9 @@ class _AcademiaPageState extends State<AcademiaPage> {
                             color: Colors.blueAccent,
                             shape: BoxShape.circle,
                           ),
-                          todayTextStyle: TextStyle(
-                            color: Colors.blueAccent,
-                            fontWeight: FontWeight.bold,
+                          todayDecoration: BoxDecoration(
+                            color: Colors.orangeAccent,
+                            shape: BoxShape.circle,
                           ),
                         ),
                         calendarBuilders: CalendarBuilders(
@@ -459,7 +461,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
 
-                          // 👇 ESTO es lo que elimina el “recorte/borde interno”
+                          
                           isCollapsed: true,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
