@@ -516,7 +516,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
                         child: Ink(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
+                              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
