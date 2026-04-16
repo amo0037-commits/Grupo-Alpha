@@ -1,7 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'register_screen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,6 +18,41 @@ class _LoginPageState extends State<LoginPage> {
 
   bool loading = false;
 
+  Future<void> saveFcmToken() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  final messaging = FirebaseMessaging.instance;
+
+  // pedir permisos (solo la primera vez)
+  await messaging.requestPermission();
+
+  // obtener token del dispositivo
+  String? token = await messaging.getToken();
+
+  print("FCM TOKEN: $token");
+
+  if (token != null) {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          'fcmToken': token,
+        });
+  }
+
+  // si el token cambia en el futuro
+  messaging.onTokenRefresh.listen((newToken) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          'fcmToken': newToken,
+        });
+  });
+}
+
+
   Future<void> login() async {
     setState(() => loading = true);
 
@@ -25,6 +61,8 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      await saveFcmToken();
+
     } on FirebaseAuthException catch (e) {
       String mensaje = 'Error al iniciar sesión';
 
@@ -51,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
           colors: [
             Color(0xFF1E293B),
             Color(0xFF334155),
-            Color(0xFF64B5F6), // 🔥 MISMO AZUL DEL HOME
+            Color(0xFF64B5F6), 
           ],
         ),
       ),

@@ -14,10 +14,22 @@ import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
 import 'package:gestion_cliente/screens/servicios/fisioterapia_page.dart';
 import 'package:gestion_cliente/screens/servicios/academia_page.dart';
 import 'package:gestion_cliente/screens/splash_screen.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:gestion_cliente/notifications_service.dart';
+
 
 void main() async {
   // Firebase
   WidgetsFlutterBinding.ensureInitialized();
+
+  tz.initializeTimeZones();
+
+  // Initialize notifications
+  await NotificationsService.init();
+
+
   //  Inicializa firebase con las opciones específicas para cada plataforma
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
