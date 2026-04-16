@@ -202,7 +202,7 @@ class _DashboardPageState extends State<DashboardPage>
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const profile_page()),
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
               );
             },
           ),
