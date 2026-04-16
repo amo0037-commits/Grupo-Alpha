@@ -186,6 +186,8 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
     final especialistaReserva = _especialistaSeleccionado;
     final esSabado = _selectedDay!.weekday == DateTime.saturday;
 
+    
+
     // Validar sábado antes de ir a Firestore
     if (esSabado && !_kEspecialistasSabado.contains(especialistaReserva)) {
       _mostrar('Los sábados solo están disponibles Especialista 4 y 5');
@@ -246,14 +248,8 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      await NotificationsService.scheduleNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: widget.negocio,
-        body: 'Tu cita está programada en 1 hora.\nServicio: ${widget.negocio}\nEspecialista: $especialistaReserva',
-        scheduledDate: fechaCompleta,
-      );
-
       _mostrar('Reserva confirmada');
+
       _fetchBlockedDays();
 
       setState(() {
@@ -262,11 +258,26 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
         _especialistaSeleccionado = '';
         _horasDisponibles = List.from(horariosTotales);
       });
+
+      try {
+        await NotificationsService.scheduleNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: widget.negocio,
+          body: 'Tu cita está programada en 1 hora.\nServicio: ${widget.negocio}\nEspecialista: $especialistaReserva',
+          scheduledDate: fechaCompleta,
+        );
+      } catch (e) {
+        debugPrint('Error al programar notificación: $e');
+      }
+
     } catch (e) {
       _mostrar('Error al realizar la reserva. Inténtalo de nuevo.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+      
+      _mostrar('Reserva confirmada');
+    
   }
 
   void _mostrar(String msg) {
