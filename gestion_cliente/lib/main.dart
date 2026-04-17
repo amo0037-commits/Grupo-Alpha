@@ -9,6 +9,7 @@ import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/screens/register_screen.dart';
 import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/admin_page.dart';
+import 'package:gestion_cliente/screens/profile_page.dart';
 import 'package:gestion_cliente/screens/servicios/gimnasio_page.dart';
 import 'package:gestion_cliente/screens/servicios/yoga_page.dart';
 import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
