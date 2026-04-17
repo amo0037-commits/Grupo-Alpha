@@ -7,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/reserva_screen.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gestion_cliente/screens/profile_page.dart';
 
 class PaginaInicio extends StatefulWidget {
   const PaginaInicio({super.key});
@@ -16,27 +16,22 @@ class PaginaInicio extends StatefulWidget {
   State<PaginaInicio> createState() => _PaginaInicioState();
 }
 
-class _PaginaInicioState extends State<PaginaInicio>
-    with SingleTickerProviderStateMixin {
+class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderStateMixin {
   late AnimationController _logoController;
   late Animation<double> _logoAnim;
-  
-  //Declarar la variable de estado para la carga
   bool _isLoadingDashboard = false;
 
   @override
   void initState() {
     super.initState();
-
     _logoController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
     );
 
-    _logoAnim = Tween<double>(
-      begin: 0.97, // valor base móvil
-      end: 1.03,   // valor máximo móvil
-    ).chain(CurveTween(curve: Curves.easeInOut)).animate(_logoController);
+    _logoAnim = Tween<double>(begin: 0.95, end: 1.05)
+        .chain(CurveTween(curve: Curves.easeInOut))
+        .animate(_logoController);
 
     _logoController.repeat(reverse: true);
   }
@@ -49,14 +44,11 @@ class _PaginaInicioState extends State<PaginaInicio>
 
   Future<void> _irAlDashboard() async {
     setState(() => _isLoadingDashboard = true);
-
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        DocumentSnapshot userDoc =
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
         if (userDoc.exists) {
           final data = userDoc.data() as Map<String, dynamic>;
@@ -65,9 +57,7 @@ class _PaginaInicioState extends State<PaginaInicio>
           if (mounted) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => DashboardPage(negocios: negocios),
-              ),
+              MaterialPageRoute(builder: (context) => DashboardPage(negocios: negocios)),
             );
           }
         } else {
@@ -90,114 +80,189 @@ class _PaginaInicioState extends State<PaginaInicio>
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    // Ajuste de tamaño del logo
-    double logoSize = screenWidth < 600
-        ? screenWidth * 0.9
-        : min(screenWidth * 0.4, 800);
-
-    // Ajuste de animación según tamaño de pantalla
-    double scaleBegin = screenWidth < 600 ? 0.97 : 0.93;
-    double scaleEnd = screenWidth < 600 ? 1.03 : 1.07;
-
-    // Solo se actualiza Tween si cambió la pantalla
-    _logoAnim = Tween<double>(begin: scaleBegin, end: scaleEnd)
-        .chain(CurveTween(curve: Curves.easeInOut))
-        .animate(_logoController);
+    // Tamaños adaptativos
+    double logoSize = screenWidth < 600 ? screenWidth * 0.6 : 300;
+    double iconSize = min(max(screenWidth * 0.06, 24), 35);
 
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
+          colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          titleSpacing: 0,
-          centerTitle: false,
-          toolbarHeight: 100,
-          title: SizedBox(
-            height: 80,
-            child: Image.asset(
-              'assets/images/LogoAlphaAppPagInicio.png',
-              height: 165,
-              fit: BoxFit.contain,
-            ),
-          ),
+          elevation: 0,
+          toolbarHeight: 80,
           backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
-              ),
+          leadingWidth: 150,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Image.asset(
+              'assets/images/Icono_AlphaApp.png',
+              fit: BoxFit.contain,
             ),
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.logout, size: min(max(screenWidth * 0.07, 24), 50)),
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-              },
+              icon: Icon(Icons.search, size: iconSize, color: Colors.white),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => const ReservaPage())),
             ),
             IconButton(
-              icon: Icon(Icons.search, size: min(max(screenWidth * 0.07, 24), 50)),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReservaPage()),
-                );
-              },
+              icon: Icon(Icons.info_outline, size: iconSize, color: Colors.white),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => const ServicePage())),
             ),
             IconButton(
-              icon: Icon(Icons.info, size: min(max(screenWidth * 0.07, 24), 50)),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ServicePage()),
-                );
-              },
+              icon: Icon(Icons.person, size: iconSize, color: Colors.white),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => const ProfilePage())),
             ),
-            
-            _isLoadingDashboard 
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Center(
-                    child: SizedBox(
-                      width: 20, 
-                      height: 20, 
-                      child: CircularProgressIndicator(
-                        color: Colors.white, 
-                        strokeWidth: 2
-                      )
-                    )
-                  ),
-                )
-              : IconButton(
-                  icon: Icon(Icons.calendar_month_outlined, size: min(max(screenWidth * 0.07, 24), 50)),
-                  onPressed: _irAlDashboard,
-                ),
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white70),
+              onPressed: () => FirebaseAuth.instance.signOut(),
+            ),
+            const SizedBox(width: 10),
           ],
         ),
         body: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: screenHeight),
-            child: Center(
-              child: AnimatedBuilder(
-                animation: _logoAnim,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _logoAnim.value,
-                    child: child,
-                  );
-                },
-                child: Image.asset(
-                  'assets/images/LogoAlphaAppPagInicio.png',
-                  width: logoSize,
-                  fit: BoxFit.contain,
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              // --- SECCIÓN HERO ---
+              SizedBox(
+                height: screenHeight * 0.45,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _logoAnim,
+                      builder: (context, child) => Transform.scale(
+                        scale: _logoAnim.value,
+                        child: child,
+                      ),
+                      child: Image.asset(
+                        'assets/images/LogoAlphaAppPagInicio.png',
+                        width: logoSize,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    DefaultTextStyle(
+                      style: const TextStyle(
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText('Bienvenido a AlphaApp'),
+                          TypewriterAnimatedText('Gestión inteligente'),
+                          TypewriterAnimatedText('Tu negocio bajo control'),
+                        ],
+                        repeatForever: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              // --- SECCIÓN DE TARJETAS ---
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Accesos rápidos",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: screenWidth > 600 ? 4 : 2,
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                      childAspectRatio: 1.1, // Ajusta la proporción de las tarjetas
+                      children: [
+                        _buildQuickCard(
+                          Icons.calendar_month,
+                          "Mi Agenda",
+                          _irAlDashboard,
+                          isLoading: _isLoadingDashboard,
+                        ),
+                        _buildQuickCard(
+                          Icons.search,
+                          "Reservas",
+                          () => Navigator.push(context,
+                              MaterialPageRoute(builder: (context) => const ReservaPage())),
+                        ),
+                        _buildQuickCard(
+                          Icons.info_outline,
+                          "Servicios",
+                          () => Navigator.push(context,
+                              MaterialPageRoute(builder: (context) => const ServicePage())),
+                        ),
+                        _buildQuickCard(
+                          Icons.person_outline,
+                          "Mi Perfil",
+                          () => Navigator.push(context,
+                              MaterialPageRoute(builder: (context) => const ProfilePage())),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickCard(IconData icon, String title, VoidCallback onTap,
+      {bool isLoading = false}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: InkWell(
+          onTap: isLoading ? null : onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  const CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                else
+                  Icon(icon, size: 40, color: Colors.blueAccent),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

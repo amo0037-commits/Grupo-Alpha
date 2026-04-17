@@ -222,7 +222,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -235,7 +235,9 @@ class _AcademiaPageState extends State<AcademiaPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFF5F5F5), Color(0xFFF57C00)],
+            colors: [  Color(0xFFF5F5F5),
+  Color(0xFFFFB74D), 
+  Color(0xFFF57C00), ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -317,9 +319,9 @@ class _AcademiaPageState extends State<AcademiaPage> {
                             color: Colors.blueAccent,
                             shape: BoxShape.circle,
                           ),
-                          todayTextStyle: TextStyle(
-                            color: Colors.blueAccent,
-                            fontWeight: FontWeight.bold,
+                          todayDecoration: BoxDecoration(
+                            color: Colors.orangeAccent,
+                            shape: BoxShape.circle,
                           ),
                         ),
                         calendarBuilders: CalendarBuilders(
@@ -345,7 +347,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 30),
 
-                    // DROPDOWN MATERIA
+                    
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.6),
@@ -419,7 +421,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 15),
 
-                    // DROPDOWN HORA
+                    
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -459,7 +461,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
 
-                          // 👇 ESTO es lo que elimina el “recorte/borde interno”
+                          
                           isCollapsed: true,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
@@ -498,7 +500,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 35),
 
-                    // BOTÓN RESERVAR
+                    
                     SizedBox(
                       width: screenWidth * 0.7,
                       height: 55,
@@ -516,7 +518,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
                         child: Ink(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
+                              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
