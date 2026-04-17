@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
@@ -34,28 +35,31 @@ class _ReservaPageState extends State<ReservaPage> {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFE0E3E7), Color(0xFF64B5F6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1E293B),
+            Color(0xFF334155),
+            Color(0xFF64B5F6),
+          ],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, color: Colors.white70),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text('Reserva tu servicio'),
-          backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF9CA3AF), Color(0xFF4B5563)],
-              ),
-            ),
+          title: const Text(
+            'Reserva tu servicio',
+            style: TextStyle(color: Colors.white),
           ),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
+
         body: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.10,
@@ -64,6 +68,7 @@ class _ReservaPageState extends State<ReservaPage> {
           child: Column(
             children: [
               const SizedBox(height: 20),
+
               Center(
                 child: AnimatedTextKit(
                   animatedTexts: [
@@ -71,44 +76,52 @@ class _ReservaPageState extends State<ReservaPage> {
                       'Ofrecemos una gama variada de servicios',
                       textAlign: TextAlign.center,
                       textStyle: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Roboto',
                       ),
                       colors: const [
-                        Color(0xFF0D47A1),
-                        Color(0xFF1565C0),
                         Color(0xFF64B5F6),
-                        Color(0xFF9CA3AF),
+                        Color(0xFF42A5F5),
+                        Color(0xFF93C5FD),
+                        Colors.white70,
                       ],
                       speed: const Duration(milliseconds: 400),
                     ),
                   ],
                   repeatForever: true,
-                  isRepeatingAnimation: true,
                 ),
               ),
-              const SizedBox(height: 20),
-              const SizedBox(height: 20),
 
-              // Dropdown de servicios
+              const SizedBox(height: 30),
+
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxWidth: 400,
-                    minWidth: 200,
                   ),
                   child: DropdownButtonFormField<String>(
+                    dropdownColor: const Color(0xFF1E293B),
+                    value: servicioSeleccionado,
+                    style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Selecciona un servicio',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      labelStyle: const TextStyle(color: Colors.white70),
                       filled: true,
-                      fillColor: const Color.fromARGB(255, 141, 196, 241),
+                      fillColor: Colors.white.withOpacity(0.08),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.white.withOpacity(0.15),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF64B5F6),
+                        ),
+                      ),
                     ),
-                    dropdownColor: const Color.fromARGB(255, 184, 214, 245),
-                    value: servicioSeleccionado,
                     items: servicios.map((servicio) {
                       return DropdownMenuItem(
                         value: servicio,
@@ -123,66 +136,83 @@ class _ReservaPageState extends State<ReservaPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
 
-              // Campos de texto con borde animado al estilo LoginPage
+              const SizedBox(height: 30),
+
               AnimatedTextField(
                 label: 'Nombre y Apellidos',
                 controller: nombreController,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+
               AnimatedTextField(
                 label: 'Dirección',
                 controller: direccionController,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+
               AnimatedTextField(
                 label: 'Teléfono',
                 controller: telefonoController,
               ),
-              const SizedBox(height: 20),
-              AnimatedTextField(label: 'Email', controller: emailController),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+
+              AnimatedTextField(
+                label: 'Email',
+                controller: emailController,
+              ),
+              const SizedBox(height: 15),
+
               AnimatedTextField(
                 label: 'Contraseña',
                 controller: passwordController,
                 obscureText: true,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+
               AnimatedTextField(
                 label: 'Confirmar contraseña',
                 controller: confirmPasswordController,
                 obscureText: true,
               ),
+
               const SizedBox(height: 30),
 
-              // Botón de reserva
+              // 🔵 BOTÓN ACTUALIZADO (SOLO ESTE CAMBIO)
               Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 400,
-                    minWidth: 200,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF4B5563), Color(0xFF9CA3AF)],
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      height: 55,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF3B82F6),
+                            Color(0xFF60A5FA),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blueAccent.withOpacity(0.35),
+                            blurRadius: 15,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Lógica de reserva
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      child: const Center(
+                        child: Text(
+                          'Reservar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      child: const Text('Reservar'),
                     ),
                   ),
                 ),
@@ -195,9 +225,6 @@ class _ReservaPageState extends State<ReservaPage> {
   }
 }
 
-// -----------------------
-// Widget animado reutilizable (igual LoginPage)
-// -----------------------
 class AnimatedTextField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
@@ -230,22 +257,27 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400, minWidth: 200),
+        constraints: const BoxConstraints(maxWidth: 400),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 250),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
+            color: Colors.white.withOpacity(0.08),
             border: Border.all(
-              color: _hasFocus ? Colors.blueAccent : Colors.grey.shade400,
-              width: _hasFocus ? 2 : 1,
+              color: _hasFocus
+                  ? const Color(0xFF64B5F6)
+                  : Colors.white.withOpacity(0.15),
             ),
           ),
           child: TextField(
             controller: widget.controller,
             focusNode: _focusNode,
             obscureText: widget.obscureText,
+            style: const TextStyle(color: Colors.white),
+            cursorColor: const Color(0xFF64B5F6),
             decoration: InputDecoration(
               labelText: widget.label,
+              labelStyle: const TextStyle(color: Colors.white70),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
