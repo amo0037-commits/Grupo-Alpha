@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gestion_cliente/core/app_themes.dart';
-import 'package:gestion_cliente/core/notification_service.dart';
 import 'package:gestion_cliente/screens/splash_screen.dart';
 import 'package:gestion_cliente/screens/inicio_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -23,7 +22,6 @@ void main() async {
   //  Inicializa firebase con las opciones específicas para cada plataforma
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
-  await NotificationService.init();
 
   runApp(const AlphaApp());
 }

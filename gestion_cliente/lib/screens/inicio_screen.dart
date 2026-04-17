@@ -195,7 +195,7 @@ class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderSt
                           Icons.person_outline,
                           "Mi Perfil",
                           () => Navigator.push(context,
-                              MaterialPageRoute(builder: (context) => const profile_page())),
+                              MaterialPageRoute(builder: (context) => const ProfilePage())),
                         ),
                       ],
                     ),
