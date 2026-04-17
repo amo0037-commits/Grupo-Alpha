@@ -25,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      print("USER AFTER LOGIN: ${FirebaseAuth.instance.currentUser}");
     } on FirebaseAuthException catch (e) {
       String mensaje = 'Error al iniciar sesión';
 
