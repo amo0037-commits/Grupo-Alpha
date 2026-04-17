@@ -106,28 +106,7 @@ class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderSt
               fit: BoxFit.contain,
             ),
           ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.search, size: iconSize, color: Colors.white),
-              onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => const ReservaPage())),
-            ),
-            IconButton(
-              icon: Icon(Icons.info_outline, size: iconSize, color: Colors.white),
-              onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => const ServicePage())),
-            ),
-            IconButton(
-              icon: Icon(Icons.person, size: iconSize, color: Colors.white),
-              onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => const ProfilePage())),
-            ),
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white70),
-              onPressed: () => FirebaseAuth.instance.signOut(),
-            ),
-            const SizedBox(width: 10),
-          ],
+          
         ),
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -216,7 +195,7 @@ class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderSt
                           Icons.person_outline,
                           "Mi Perfil",
                           () => Navigator.push(context,
-                              MaterialPageRoute(builder: (context) => const ProfilePage())),
+                              MaterialPageRoute(builder: (context) => const profile_page())),
                         ),
                       ],
                     ),
