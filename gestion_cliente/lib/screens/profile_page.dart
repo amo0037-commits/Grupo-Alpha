@@ -6,6 +6,108 @@ import 'dart:ui';
 import 'package:gestion_cliente/screens/inicio_screen.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 
+
+class AnimatedMenuButton extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const AnimatedMenuButton({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  State<AnimatedMenuButton> createState() => _AnimatedMenuButtonState();
+}
+
+class _AnimatedMenuButtonState extends State<AnimatedMenuButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+
+    _scale = Tween<double>(begin: 1, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  void _onTap() async {
+    await _controller.forward();
+    await _controller.reverse();
+    widget.onTap();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: ScaleTransition(
+        scale: _scale,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _onTap,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 18),
+                    child: Row(
+                      children: [
+                        Icon(widget.icon,
+                            color: const Color(0xFF64B5F6), size: 24),
+                        const SizedBox(width: 15),
+                        Text(
+                          widget.title,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios,
+                            color: Colors.white24, size: 14),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -19,7 +121,6 @@ class ProfilePage extends StatelessWidget {
     "assets/images/tazaperfil.png",
     "assets/images/tazasuciaperfil.png",
   ];
-
 
   @override
   Widget build(BuildContext context) {
@@ -78,47 +179,46 @@ class ProfilePage extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                 _buildMenuButton(
-                    Icons.person_outline,
-                      "Editar Información",
-                  () {
-                       final user = FirebaseAuth.instance.currentUser;
-                        if (user != null) {
-                   _showEditProfile(context, user.uid);
-                 }
-                },
-              ),
-                _buildMenuButton(
-                   Icons.notifications_none,
-                    "Notificaciones",
-                () {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
+                AnimatedMenuButton(
+                    icon: Icons.person_outline,
+                    title: "Editar Perfil",
+                    onTap: () {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                       _showEditProfile(context, user.uid);
+                  }
+              },
+          ),
+                AnimatedMenuButton(
+                    icon: Icons.notifications_none,
+                    title: "Notificaciones",
+                    onTap: () {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
                        _showNotifications(context, user.uid);
-                 }
-               },
-              ),
-                  _buildMenuButton(
-                    Icons.miscellaneous_services_outlined,
-                      "Servicios",
-                    () {
-                        final user = FirebaseAuth.instance.currentUser;
-                         if (user != null) {
-                        _showNegociosDialog(context, user.uid);
-                     }
-                    },
-                  ),
-                  _buildMenuButton(
-                    Icons.support_agent,
-                      "Soporte",
-                    () {
-                        final user = FirebaseAuth.instance.currentUser;
-                         if (user != null) {
-                        _showHelpDialog(context, user.uid);
-                     }
-                    },
-                  ),
-
+                  }
+              },
+          ),
+                  AnimatedMenuButton(
+                    icon: Icons.miscellaneous_services_outlined,
+                    title: "Servicios",
+                    onTap: () {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                       _showNegociosDialog(context, user.uid);
+                  }
+              },
+          ),
+                  AnimatedMenuButton(
+                    icon: Icons.support_agent,
+                    title: "Ayuda y Soporte",
+                    onTap: () {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                       _showHelpDialog(context, user.uid);
+                  }
+              },
+          ),
                   const SizedBox(height: 25),
                   const Padding(
                     padding:
@@ -194,76 +294,95 @@ class ProfilePage extends StatelessWidget {
 
         return Column(
           children: [
-            GestureDetector(
-              onTap: () {
-                _showAvatarPicker(context, user.uid);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.blueAccent
-                        .withOpacity(0.5),
-                    width: 2,
-                  ),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 600),
-                  transitionBuilder: (child, animation) {
-                    final bounceAnimation =
-                        TweenSequence<double>([
-                      TweenSequenceItem(
-                        tween: Tween(begin: 0.8, end: 1.2)
-                            .chain(CurveTween(
-                                curve: Curves.easeOut)),
-                        weight: 40,
-                      ),
-                      TweenSequenceItem(
-                        tween: Tween(begin: 1.2, end: 0.95)
-                            .chain(CurveTween(
-                                curve: Curves.easeInOut)),
-                        weight: 30,
-                      ),
-                      TweenSequenceItem(
-                        tween: Tween(begin: 0.95, end: 1.0)
-                            .chain(CurveTween(
-                                curve: Curves.easeOut)),
-                        weight: 30,
-                      ),
-                    ]).animate(animation);
+            StatefulBuilder(
+  builder: (context, setState) {
+    double scale = 1.0;
 
-                    return FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(
-                        scale: bounceAnimation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
-                    key: ValueKey(avatarUrl ?? iniciales), // 🔥 clave
-                    radius: 45,
-                    backgroundColor:
-                        const Color(0xFF64B5F6),
-                    backgroundImage: avatarUrl != null
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            iniciales,
-                            style: const TextStyle(
-                              fontSize: 30,
-                              color: Colors.white,
-                              fontWeight:
-                                  FontWeight.bold,
-                            ),
-                          )
-                        : null,
-                  ),
-                ),
-              ),
+    void animateTap() async {
+      setState(() => scale = 0.9);
+      await Future.delayed(const Duration(milliseconds: 100));
+      setState(() => scale = 1.05);
+      await Future.delayed(const Duration(milliseconds: 100));
+      setState(() => scale = 1.0);
+    }
+
+    return GestureDetector(
+      onTap: () async {
+  setState(() => scale = 0.9);
+  await Future.delayed(const Duration(milliseconds: 100));
+
+  setState(() => scale = 1.05);
+  await Future.delayed(const Duration(milliseconds: 100));
+
+  setState(() => scale = 1.0);
+
+  _showAvatarPicker(context, user.uid);
+},
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        child: Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.blueAccent.withOpacity(0.5),
+              width: 2,
             ),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 600),
+            transitionBuilder: (child, animation) {
+              final bounceAnimation = TweenSequence<double>([
+                TweenSequenceItem(
+                  tween: Tween(begin: 0.8, end: 1.2)
+                      .chain(CurveTween(curve: Curves.easeOut)),
+                  weight: 40,
+                ),
+                TweenSequenceItem(
+                  tween: Tween(begin: 1.2, end: 0.95)
+                      .chain(CurveTween(curve: Curves.easeInOut)),
+                  weight: 30,
+                ),
+                TweenSequenceItem(
+                  tween: Tween(begin: 0.95, end: 1.0)
+                      .chain(CurveTween(curve: Curves.easeOut)),
+                  weight: 30,
+                ),
+              ]).animate(animation);
+
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: bounceAnimation,
+                  child: child,
+                ),
+              );
+            },
+            child: CircleAvatar(
+              key: ValueKey(avatarUrl ?? iniciales),
+              radius: 45,
+              backgroundColor: const Color(0xFF64B5F6),
+              backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl == null
+                  ? Text(
+                      iniciales,
+                      style: const TextStyle(
+                        fontSize: 30,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  },
+),
             const SizedBox(height: 15),
             Text(
               nombreCompleto,
