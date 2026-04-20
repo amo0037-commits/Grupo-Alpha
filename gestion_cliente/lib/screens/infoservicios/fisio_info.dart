@@ -76,7 +76,6 @@ class _FisioInfoState extends State<FisioInfo>
             "Disponemos de ultrasonido terapéutico, utilizado para tratar lesiones profundas de tejidos blandos, mejorando la circulación y acelerando los procesos de recuperación.\n\n"
             "Nuestras máquinas de láser terapéutico permiten actuar sobre zonas específicas del cuerpo, favoreciendo la regeneración celular y la disminución del dolor crónico o agudo.\n\n"
             "Además, contamos con equipos de magnetoterapia, que utilizan campos magnéticos para mejorar la consolidación ósea y reducir procesos inflamatorios.\n\n"
-            "Incluimos sistemas de presoterapia, ideales para mejorar la circulación, reducir la retención de líquidos y favorecer la recuperación muscular.\n\n"
             "Nuestro objetivo es combinar la tecnología con la atención personalizada para ofrecer tratamientos más precisos, efectivos y adaptados a cada paciente.";
 
       case "Tratamientos personalizados":
