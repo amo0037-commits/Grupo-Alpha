@@ -262,8 +262,8 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
       try {
         await NotificationsService.scheduleNotification(
           id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: widget.negocio,
-          body: 'Tu cita está programada en 1 hora.\nServicio: ${widget.negocio}\nEspecialista: $especialistaReserva',
+          servicio: widget.negocio,
+          especialista: especialistaReserva,
           scheduledDate: fechaCompleta,
         );
       } catch (e) {
@@ -276,7 +276,6 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
       if (mounted) setState(() => _loading = false);
     }
       
-      _mostrar('Reserva confirmada');
     
   }
 
