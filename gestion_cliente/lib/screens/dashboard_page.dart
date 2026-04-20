@@ -26,17 +26,17 @@ class _DashboardPageState extends State<DashboardPage>
     'ruta': '/gimnasio',
     'servicio': 'Gimnasio',
   },
-  'Centro de Yoga': {
+  'Yoga': {
     'ruta': '/yoga',
-    'servicio': 'Centro de Yoga',
+    'servicio': 'Yoga',
   },
   'Peluqueria': {
     'ruta': '/peluqueria',
     'servicio': 'Peluqueria',
   },
-  'Centro de Fisioterapia': {
+  'Fisioterapia': {
     'ruta': '/fisioterapia',
-    'servicio': 'Centro de Fisioterapia',
+    'servicio': 'Fisioterapia',
   },
   'Academia': {
     'ruta': '/academia',
@@ -72,11 +72,11 @@ class _DashboardPageState extends State<DashboardPage>
     switch (negocio) {
       case 'Gimnasio':
         return Icons.fitness_center;
-      case 'Centro de Yoga':
+      case 'Yoga':
         return Icons.self_improvement;
       case 'Peluqueria':
         return Icons.content_cut;
-      case 'Centro de Fisioterapia':
+      case 'Fisioterapia':
         return Icons.health_and_safety;
       case 'Academia':
         return Icons.school;
@@ -313,18 +313,110 @@ class _DashboardPageState extends State<DashboardPage>
           );
         }
 
+       
+   Widget _buildReservaCard(
+  String servicio,
+  String clase,
+  String hora,
+  DateTime fecha,
+  QueryDocumentSnapshot doc,
+  double screenWidth,
+) {
+  return Center(
+    child: SizedBox(
+      width: screenWidth > 800 ? 500 : screenWidth * 0.95,
+      child: Card(
+        color: const Color(0xFF93C5FD),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ListTile(
+          title: Text(servicio),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(clase),
+              Text('📅 ${DateFormat('dd/MM/yyyy').format(fecha)}'),
+              Text('⏰ $hora'),
+            ],
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Eliminar reserva'),
+                  content: const Text(
+                      '¿Seguro que quieres eliminar esta reserva?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancelar'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text(
+                        'Eliminar',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                HapticFeedback.mediumImpact();
+
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('reservas')
+                      .doc(doc.id)
+                      .delete();
+
+                  if (!mounted) return;
+
+                  Future.microtask(() {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Reserva eliminada correctamente'),
+                      ),
+                    );
+                  });
+                } catch (e) {
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al eliminar: $e'),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+
+
         final reservas = snapshot.data!.docs;
 
-        if (reservas.isEmpty) {
-          return const Center(
-            child: Text(
-              'No tienes reservas activas',
-              style: TextStyle(color: Colors.white),
-            ),
-          );
-        }
-
-        return ListView.builder(
+       return AnimatedSwitcher(
+  duration: const Duration(milliseconds: 300),
+  child: reservas.isEmpty
+      ? const Center(
+          key: ValueKey('empty'),
+          child: Text(
+            'No tienes reservas activas',
+            style: TextStyle(color: Colors.white),
+          ),
+        )
+      : ListView.builder(
+          key: const ValueKey('list'),
           padding: const EdgeInsets.all(16),
           itemCount: reservas.length,
           itemBuilder: (context, index) {
@@ -332,85 +424,16 @@ class _DashboardPageState extends State<DashboardPage>
             final servicio = data['servicio'];
             final clase = data['clase'];
             final hora = data['hora'];
-            final fecha = (data['fecha'] as Timestamp).toDate();
+            final fecha =
+                (data['fecha'] as Timestamp).toDate();
             final doc = reservas[index];
 
-            return Center(
-              child: SizedBox(
-                width: screenWidth > 800 ? 500 : screenWidth * 0.95,
-                child: Card(
-                  color: const Color(0xFF93C5FD),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: ListTile(
-                    title: Text('$servicio'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(clase),
-                        Text('📅 ${DateFormat('dd/MM/yyyy').format(fecha)}'),
-                        Text('⏰ $hora'),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Eliminar reserva'),
-                            content: const Text(
-                                '¿Seguro que quieres eliminar esta reserva?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, true),
-                                child: const Text(
-                                  'Eliminar',
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirm == true) {
-                          HapticFeedback.mediumImpact();
-
-                          try {
-                            await FirebaseFirestore.instance
-                                .collection('reservas')
-                                .doc(doc.id)
-                                .delete();
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Reserva eliminada correctamente'),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error al eliminar: $e'),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            );
+            return _buildReservaCard(
+                servicio, clase, hora, fecha, doc, screenWidth);
           },
-        );
+        ),
+);
+
       },
     );
   }
