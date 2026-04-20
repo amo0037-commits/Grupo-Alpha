@@ -2,20 +2,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gestion_cliente/core/app_themes.dart';
 import 'package:gestion_cliente/screens/splash_screen.dart';
-import 'package:gestion_cliente/screens/inicio_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 import 'package:gestion_cliente/screens/register_screen.dart';
 import 'package:gestion_cliente/screens/dashboard_page.dart';
 import 'package:gestion_cliente/screens/admin_page.dart';
-import 'package:gestion_cliente/screens/profile_page.dart';
 import 'package:gestion_cliente/screens/servicios/gimnasio_page.dart';
 import 'package:gestion_cliente/screens/servicios/yoga_page.dart';
 import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
 import 'package:gestion_cliente/screens/servicios/fisioterapia_page.dart';
 import 'package:gestion_cliente/screens/servicios/academia_page.dart';
-import 'package:gestion_cliente/screens/splash_screen.dart';
+
 
 void main() async {
   // Firebase
@@ -92,7 +90,7 @@ class AlphaApp extends StatelessWidget {
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Yoga',
           );
-          ;
+          
         },
         '/peluqueria': (context) => PeluqueriaPage(),
         '/fisioterapia': (context) {
