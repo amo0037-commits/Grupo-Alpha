@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gestion_cliente/screens/inicio_screen.dart';
+
 import 'register_screen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,7 +18,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  bool loading = false;
+  bool _buttonPressed = false;
+  bool _isLoading = false;
 
   Future<void> saveFcmToken() async {
   final user = FirebaseAuth.instance.currentUser;
@@ -54,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
 
 
   Future<void> login() async {
-    setState(() => loading = true);
+    setState(() => _isLoading = true);
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -74,9 +77,56 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     if (!mounted) return;
-    setState(() => loading = false);
+    setState(() => _isLoading = false);
+  // 1. Validación básica antes de disparar Firebase
+  if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+    _mostrarMensaje("Por favor, rellena todos los campos");
+    return;
   }
 
+  setState(() => _isLoading = true);
+
+  try {
+    // 2. Intento de inicio de sesión
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    // 3. Verificación de montaje
+    if (!mounted) return;
+
+    // 4. NAVEGACIÓN CRÍTICA:
+    // Usamos pushAndRemoveUntil para limpiar la memoria de la pantalla de login
+    // y evitar que el usuario pueda volver atrás al login con el botón del móvil.
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const PaginaInicio()),
+      (Route<dynamic> route) => false,
+    );
+
+  } on FirebaseAuthException catch (e) {
+    String errorMsg = "Ocurrió un error";
+    if (e.code == 'user-not-found') errorMsg = "Usuario no encontrado";
+    else if (e.code == 'wrong-password') errorMsg = "Contraseña incorrecta";
+    else if (e.code == 'invalid-email') errorMsg = "Email no válido";
+    
+    _mostrarMensaje(errorMsg);
+  } catch (e) {
+    _mostrarMensaje("Error inesperado: $e");
+  } finally {
+    // Solo quitamos el loading si seguimos en esta pantalla
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+}
+
+// Asegúrate de que el método se llame así o cámbialo en el catch
+void _mostrarMensaje(String msg) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
+  );
+}
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -126,68 +176,99 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 40),
 
                 _glassField(
-                  AnimatedTextField(
-                    label: 'Email',
-                    controller: emailController,
-                  ),
-                ),
+  AnimatedTextField(
+    label: 'Email',
+    controller: emailController,
+    textInputAction: TextInputAction.next,
+  ),
+),
 
                 const SizedBox(height: 20),
 
-                _glassField(
-                  AnimatedTextField(
-                    label: 'Contraseña',
-                    obscureText: true,
-                    controller: passwordController,
-                  ),
-                ),
+               _glassField(
+  AnimatedTextField(
+    label: 'Contraseña',
+    obscureText: true,
+    controller: passwordController,
+    textInputAction: TextInputAction.done, // Esto cambia el icono del teclado a un "Check" o "Done"
+    onSubmitted: login, // Al pulsar el botón del teclado, llama a login()
+  ),
+),
 
                 const SizedBox(height: 30),
 
                 // BOTÓN
-                GestureDetector(
-                  onTap: login,
-                  child: Container(
-                    height: 55,
-                    width: double.infinity,
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF3B82F6),
-                          Color(0xFF60A5FA),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blueAccent.withOpacity(0.4),
-                          blurRadius: 15,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: Center(
-                      child: loading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Iniciar sesión',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
+               GestureDetector(
+  onTapDown: (_) {
+    setState(() => _buttonPressed = true);
+  },
+  onTapUp: (_) {
+    setState(() => _buttonPressed = false);
+    login();
+  },
+  onTapCancel: () {
+    setState(() => _buttonPressed = false);
+  },
+  child: AnimatedScale(
+    duration: const Duration(milliseconds: 120),
+    curve: Curves.easeOut,
+    scale: _buttonPressed ? 0.96 : 1.0,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 120),
+      height: 55,
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 400),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: _buttonPressed
+              ? [
+                  const Color(0xFF2F6FE4),
+                  const Color(0xFF4D94FF),
+                ]
+              : [
+                  const Color(0xFF3B82F6),
+                  const Color(0xFF60A5FA),
+                ],
+        ),
+        boxShadow: _buttonPressed
+            ? [
+                BoxShadow(
+                  color: Colors.blueAccent.withOpacity(0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.blueAccent.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                )
+              ],
+      ),
+      child: Center(
+        child: _isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
                 ),
+              )
+            : const Text(
+                'Iniciar sesión',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+      ),
+    ),
+  ),
+),
 
                 const SizedBox(height: 20),
 
@@ -242,11 +323,15 @@ class AnimatedTextField extends StatefulWidget {
   final String label;
   final bool obscureText;
   final TextEditingController controller;
+  final TextInputAction? textInputAction;
+  final VoidCallback? onSubmitted;
 
   const AnimatedTextField({
     required this.label,
     this.obscureText = false,
     required this.controller,
+    this.textInputAction,
+    this.onSubmitted,
     super.key,
   });
 
@@ -267,23 +352,32 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: widget.controller,
-      focusNode: _focusNode,
-      obscureText: widget.obscureText,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: TextStyle(
-          color: _hasFocus ? Colors.white : Colors.white70,
-        ),
-        border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 18,
-        ),
+Widget build(BuildContext context) {
+  return TextField(
+    controller: widget.controller,
+    focusNode: _focusNode,
+    obscureText: widget.obscureText,
+    textInputAction: widget.textInputAction, // 'next' para email, 'done' para password
+    
+    // Cambia/asegúrate de que esto esté así:
+    onSubmitted: (value) {
+      if (widget.onSubmitted != null) {
+        widget.onSubmitted!();
+      }
+    },
+    
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      labelText: widget.label,
+      labelStyle: TextStyle(
+        color: _hasFocus ? Colors.white : Colors.white70,
       ),
-    );
-  }
+      border: InputBorder.none,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 18,
+      ),
+    ),
+  );
+}
 }
