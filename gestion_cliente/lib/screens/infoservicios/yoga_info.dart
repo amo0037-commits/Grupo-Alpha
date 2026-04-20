@@ -239,7 +239,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 16),
                                     child: Text(
-                                      "Relaja cuerpo y mente",
+                                      "Relaja tu cuerpo",
                                       style: TextStyle(
                                         color: agua,
                                         fontSize: 24,
