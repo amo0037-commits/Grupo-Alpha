@@ -15,7 +15,7 @@ import 'package:gestion_cliente/screens/servicios/yoga_page.dart';
 import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
 import 'package:gestion_cliente/screens/servicios/fisioterapia_page.dart';
 import 'package:gestion_cliente/screens/servicios/academia_page.dart';
-import 'package:gestion_cliente/screens/splash_screen.dart';
+
 
 void main() async {
   // Firebase
@@ -75,9 +75,7 @@ class AlphaApp extends StatelessWidget {
 
         // Servicios
         '/gimnasio': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
           return GimnasioPage(
             userId: args?['userId'] ?? '',
@@ -85,30 +83,24 @@ class AlphaApp extends StatelessWidget {
           );
         },
         '/yoga': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
           return YogaPage(
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Yoga',
           );
-          ;
+          
         },
-        '/peluqueria': (context) => PeluqueriaPage(),
+        '/peluqueria': (context) => PeluqueriaPage(userId: '', negocio: 'Peluqueria'), 
         '/fisioterapia': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return FisioterapiaPage(
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Fisioterapia',
           );
         },
         '/academia': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return AcademiaPage(
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Academia',

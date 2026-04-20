@@ -5,8 +5,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_cliente/screens/services_screen.dart';
 import 'package:gestion_cliente/screens/profile_page.dart';
+import 'package:gestion_cliente/screens/servicios/academia_page.dart';
+import 'package:gestion_cliente/screens/servicios/fisioterapia_page.dart';
+import 'package:gestion_cliente/screens/servicios/gimnasio_page.dart';
+import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
+import 'package:gestion_cliente/screens/servicios/yoga_page.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+
 
 class DashboardPage extends StatefulWidget {
   final List<String> negocios;
@@ -21,35 +27,33 @@ class _DashboardPageState extends State<DashboardPage>
   late TabController _tabController;
   int _currentIndex = 0;
 
- final Map<String, Map<String, String>> rutasServicios = const {
-  'Gimnasio': {
-    'ruta': '/gimnasio',
-    'servicio': 'Gimnasio',
-  },
-  'Centro de Yoga': {
-    'ruta': '/yoga',
-    'servicio': 'Centro de Yoga',
-  },
-  'Peluqueria': {
-    'ruta': '/peluqueria',
-    'servicio': 'Peluqueria',
-  },
-  'Centro de Fisioterapia': {
-    'ruta': '/fisioterapia',
-    'servicio': 'Centro de Fisioterapia',
-  },
-  'Academia': {
-    'ruta': '/academia',
-    'servicio': 'Academia',
-  },
-};
+  // 1. MAPA DE FACTORÍA: Asocia el nombre con el Widget de destino
+  final Map<String, Widget Function(String uid, String nombre)> paginasServicios = {
+    'Gimnasio': (uid, nombre) => GimnasioPage(userId: uid, negocio: nombre),
+    'Yoga': (uid, nombre) => YogaPage(userId: uid, negocio: nombre),
+    'Peluqueria': (uid, nombre) => PeluqueriaPage(userId: uid, negocio: nombre),
+    'Fisioterapia': (uid, nombre) => FisioterapiaPage(userId: uid, negocio: nombre),
+    'Academia': (uid, nombre) => AcademiaPage(userId: uid, negocio: nombre), // O el widget que uses
+  };
 
   final Map<String, bool> _hoveringServicios = {};
+
+  // 2. FUNCIÓN PARA NAVEGAR SIN CAMBIAR LA URL
+  void _NoUrl(BuildContext context, Widget paginaDestino) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        settings: const RouteSettings(name: null), 
+        pageBuilder: (context, animation, secondaryAnimation) => paginaDestino,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
@@ -70,18 +74,12 @@ class _DashboardPageState extends State<DashboardPage>
 
   IconData getIcono(String negocio) {
     switch (negocio) {
-      case 'Gimnasio':
-        return Icons.fitness_center;
-      case 'Centro de Yoga':
-        return Icons.self_improvement;
-      case 'Peluqueria':
-        return Icons.content_cut;
-      case 'Centro de Fisioterapia':
-        return Icons.health_and_safety;
-      case 'Academia':
-        return Icons.school;
-      default:
-        return Icons.business;
+      case 'Gimnasio': return Icons.fitness_center;
+      case 'Yoga': return Icons.self_improvement;
+      case 'Peluqueria': return Icons.content_cut;
+      case 'Fisioterapia': return Icons.health_and_safety;
+      case 'Academia': return Icons.school;
+      default: return Icons.business;
     }
   }
 
@@ -102,12 +100,12 @@ class _DashboardPageState extends State<DashboardPage>
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: InkWell(
               onTap: () {
-                final data = rutasServicios[negocio];
-                if (data != null) {
-                  Navigator.pushNamed(context, data['ruta']!, arguments: {
-                    'userId': FirebaseAuth.instance.currentUser!.uid,
-                    'negocio': data['servicio']!,
-                  });
+                final constructor = paginasServicios[negocio];
+                if (constructor != null) {
+                  final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                  _NoUrl(context, constructor(uid, negocio));
+                } else {
+                  debugPrint("No se encontró página para: $negocio");
                 }
               },
               child: Container(
@@ -115,32 +113,19 @@ class _DashboardPageState extends State<DashboardPage>
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
-                  ),
+                  border: Border.all(color: Colors.white.withOpacity(0.15)),
                 ),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
-                    backgroundColor:
-                        const Color(0xFF64B5F6).withOpacity(0.15),
-                    child: Icon(
-                      getIcono(negocio),
-                      color: const Color(0xFF64B5F6),
-                    ),
+                    backgroundColor: const Color(0xFF64B5F6).withOpacity(0.15),
+                    child: Icon(getIcono(negocio), color: const Color(0xFF64B5F6)),
                   ),
                   title: Text(
                     negocio,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white70,
-                    size: 16,
-                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
                 ),
               ),
             ),
@@ -162,7 +147,6 @@ class _DashboardPageState extends State<DashboardPage>
       extendBody: true,
       extendBodyBehindAppBar: true,
       backgroundColor: const Color(0xFF1E293B),
-
       appBar: AppBar(
         toolbarHeight: 95,
         backgroundColor: Colors.transparent,
@@ -170,41 +154,22 @@ class _DashboardPageState extends State<DashboardPage>
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF1E293B),
-                Color(0xFF334155),
-                Color(0xFF64B5F6),
-              ],
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
             ),
           ),
         ),
         title: SizedBox(
           height: 120,
-          child: Image.asset(
-            'assets/images/LogoAlphaAppPagInicio.png',
-            fit: BoxFit.contain,
-          ),
+          child: Image.asset('assets/images/LogoAlphaAppPagInicio.png', fit: BoxFit.contain),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline,
-                size: sizeIcono, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ServicePage()),
-              );
-            },
+            icon: Icon(Icons.info_outline, size: sizeIcono, color: Colors.white),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServicePage())),
           ),
           IconButton(
-            icon: Icon(Icons.person,
-                size: sizeIcono, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()),
-              );
-            },
+            icon: Icon(Icons.person, size: sizeIcono, color: Colors.white),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage())),
           ),
         ],
         bottom: TabBar(
@@ -221,19 +186,13 @@ class _DashboardPageState extends State<DashboardPage>
           ],
         ),
       ),
-
-      
       body: SizedBox.expand(
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF1E293B),
-                Color(0xFF334155),
-                Color(0xFF64B5F6),
-              ],
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
             ),
           ),
           child: SafeArea(
@@ -264,34 +223,25 @@ class _DashboardPageState extends State<DashboardPage>
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
-                  ),
+                  border: Border.all(color: Colors.white.withOpacity(0.15)),
                 ),
-                child: Column(
+                child: const Column(
                   children: [
-                    const FloatingHand(),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Bienvenido/a',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    FloatingHand(),
+                    SizedBox(height: 10),
+                    Text('Bienvenido/a', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
             ),
           ),
+          // AQUÍ SE GENERAN LAS TARJETAS DINÁMICAMENTE
           Wrap(
             spacing: 20,
             runSpacing: 20,
-            children: widget.negocios
-                .map((n) => buildAnimatedServiceCard(
-                    n, screenWidth > 800 ? 300 : screenWidth * 0.95))
-                .toList(),
+            children: widget.negocios.map((n) {
+              return buildAnimatedServiceCard(n, screenWidth > 800 ? 300 : screenWidth * 0.95);
+            }).toList(),
           ),
         ],
       ),
@@ -307,103 +257,28 @@ class _DashboardPageState extends State<DashboardPage>
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: reservasQuery.snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF64B5F6)),
-          );
-        }
-
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Color(0xFF64B5F6)));
         final reservas = snapshot.data!.docs;
-
-        if (reservas.isEmpty) {
-          return const Center(
-            child: Text(
-              'No tienes reservas activas',
-              style: TextStyle(color: Colors.white),
-            ),
-          );
-        }
+        if (reservas.isEmpty) return const Center(child: Text('No tienes reservas activas', style: TextStyle(color: Colors.white)));
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: reservas.length,
           itemBuilder: (context, index) {
             final data = reservas[index].data();
-            final servicio = data['servicio'];
-            final clase = data['clase'];
-            final hora = data['hora'];
-            final fecha = (data['fecha'] as Timestamp).toDate();
-            final doc = reservas[index];
-
+            final docId = reservas[index].id;
             return Center(
               child: SizedBox(
                 width: screenWidth > 800 ? 500 : screenWidth * 0.95,
                 child: Card(
                   color: const Color(0xFF93C5FD),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   child: ListTile(
-                    title: Text('$servicio'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(clase),
-                        Text('📅 ${DateFormat('dd/MM/yyyy').format(fecha)}'),
-                        Text('⏰ $hora'),
-                      ],
-                    ),
+                    title: Text('${data['servicio']}'),
+                    subtitle: Text('${data['clase']}\n📅 ${DateFormat('dd/MM/yyyy').format((data['fecha'] as Timestamp).toDate())}\n⏰ ${data['hora']}'),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Eliminar reserva'),
-                            content: const Text(
-                                '¿Seguro que quieres eliminar esta reserva?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, true),
-                                child: const Text(
-                                  'Eliminar',
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirm == true) {
-                          HapticFeedback.mediumImpact();
-
-                          try {
-                            await FirebaseFirestore.instance
-                                .collection('reservas')
-                                .doc(doc.id)
-                                .delete();
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Reserva eliminada correctamente'),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error al eliminar: $e'),
-                              ),
-                            );
-                          }
-                        }
-                      },
+                      onPressed: () => _confirmarEliminacion(docId),
                     ),
                   ),
                 ),
@@ -414,17 +289,35 @@ class _DashboardPageState extends State<DashboardPage>
       },
     );
   }
+
+  Future<void> _confirmarEliminacion(String docId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar reserva'),
+        content: const Text('¿Seguro que quieres eliminar esta reserva?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      HapticFeedback.mediumImpact();
+      await FirebaseFirestore.instance.collection('reservas').doc(docId).delete();
+    }
+  }
 }
 
+// Widget FloatingHand se mantiene igual al tuyo
 class FloatingHand extends StatefulWidget {
   const FloatingHand({super.key});
-
   @override
   State<FloatingHand> createState() => _FloatingHandState();
 }
 
-class _FloatingHandState extends State<FloatingHand>
-    with SingleTickerProviderStateMixin {
+class _FloatingHandState extends State<FloatingHand> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _moveAnim;
   late Animation<double> _rotateAnim;
@@ -432,45 +325,23 @@ class _FloatingHandState extends State<FloatingHand>
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
-
-    _moveAnim = Tween<double>(begin: -6, end: 6).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _rotateAnim = Tween<double>(begin: -0.25, end: 0.25).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
+    _moveAnim = Tween<double>(begin: -6, end: 6).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _rotateAnim = Tween<double>(begin: -0.25, end: 0.25).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  void dispose() { _controller.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_moveAnim.value, 0),
-          child: Transform.rotate(
-            angle: _rotateAnim.value,
-            child: child,
-          ),
-        );
-      },
-      child: const Icon(
-        Icons.waving_hand,
-        size: 40,
-        color: Color(0xFF64B5F6),
+      builder: (context, child) => Transform.translate(
+        offset: Offset(_moveAnim.value, 0),
+        child: Transform.rotate(angle: _rotateAnim.value, child: child),
       ),
+      child: const Icon(Icons.waving_hand, size: 40, color: Color(0xFF64B5F6)),
     );
   }
 }

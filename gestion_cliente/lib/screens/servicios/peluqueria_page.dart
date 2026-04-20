@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PeluqueriaPage extends StatelessWidget {
-  const PeluqueriaPage({super.key});
+  const PeluqueriaPage({super.key, required String userId, required String negocio});
 
   @override
   Widget build(BuildContext context) {
