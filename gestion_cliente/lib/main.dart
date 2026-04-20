@@ -26,25 +26,18 @@ void main() async {
 
 
 
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
-
+class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
+        // Si el snapshot tiene datos, el usuario está logueado
         if (snapshot.hasData) {
-          return const DashboardPage(negocios: []);
-        } else {
-          return const LoginPage();
+          return PaginaInicio(); // Tu página de inicio
         }
+        // Si no, mostrar login
+        return LoginPage();
       },
     );
   }
