@@ -78,40 +78,40 @@ class ProfilePage extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                 _buildMenuButton(
-                    Icons.person_outline,
-                      "Editar Información",
-                  () {
-                       final user = FirebaseAuth.instance.currentUser;
-                        if (user != null) {
-                   _showEditProfile(context, user.uid);
-                 }
-                },
+                 AnimatedMenuButton(
+                    icon: Icons.person_outline,
+                      title: "Editar Información",
+                        onTap: () {
+                        final user = FirebaseAuth.instance.currentUser;
+                         if (user != null) {
+                           _showEditProfile(context, user.uid);
+                     }
+                 },
               ),
-                _buildMenuButton(
-                   Icons.notifications_none,
-                    "Notificaciones",
-                () {
+                AnimatedMenuButton(
+                  icon: Icons.notifications_none,
+                   title:  "Notificaciones",
+                    onTap: () {
                     final user = FirebaseAuth.instance.currentUser;
                     if (user != null) {
                        _showNotifications(context, user.uid);
                  }
                },
               ),
-                  _buildMenuButton(
-                    Icons.miscellaneous_services_outlined,
-                      "Servicios",
-                    () {
+                  AnimatedMenuButton(
+                   icon: Icons.miscellaneous_services_outlined,
+                    title: "Servicios",
+                    onTap: () {
                         final user = FirebaseAuth.instance.currentUser;
                          if (user != null) {
                         _showNegociosDialog(context, user.uid);
                      }
                     },
                   ),
-                  _buildMenuButton(
-                    Icons.support_agent,
-                      "Soporte",
-                    () {
+                 AnimatedMenuButton(
+                    icon: Icons.support_agent,
+                     title: "Soporte",
+                    onTap: () {
                         final user = FirebaseAuth.instance.currentUser;
                          if (user != null) {
                         _showHelpDialog(context, user.uid);
@@ -129,7 +129,18 @@ class ProfilePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 25),
 
-                  _buildLogoutButton(context),
+                 AnimatedLogoutButton(
+  text: "Cerrar sesión",
+  onTap: () async {
+    await FirebaseAuth.instance.signOut();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginPage()),
+      (route) => false,
+    );
+  },
+),
 
                   const SizedBox(height: 50),
                 ],
@@ -1103,31 +1114,196 @@ Widget _buildInput(TextEditingController controller, String hint) {
     );
   }
 
- Widget _buildLogoutButton(BuildContext context) {
-    return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 40),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.redAccent,
-          shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(20),
-          ),
-          padding: const EdgeInsets.symmetric(
-              vertical: 15),
+Widget _buildLogoutButton(BuildContext context) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 40),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.redAccent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
+        padding: const EdgeInsets.symmetric(vertical: 15),
+      ),
       onPressed: () async {
-  await FirebaseAuth.instance.signOut();
-  print("LOGOUT HECHO");
-  print(FirebaseAuth.instance.currentUser);
-},
-        child: const Center(
-          child: Text(
-            "Cerrar sesión",
-            style: TextStyle(
+        await FirebaseAuth.instance.signOut();
+
+        // 🔥 Redirigir al login y eliminar historial
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => LoginPage()),
+          (route) => false,
+        );
+      },
+      child: const Center(
+        child: Text(
+          "Cerrar sesión",
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ),
+    ),
+  );
+}
+}
+class AnimatedMenuButton extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const AnimatedMenuButton({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  State<AnimatedMenuButton> createState() => _AnimatedMenuButtonState();
+}
+
+class _AnimatedMenuButtonState extends State<AnimatedMenuButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    setState(() {
+      _pressed = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) {
+        _setPressed(false);
+        widget.onTap();
+      },
+      onTapCancel: () => _setPressed(false),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        scale: _pressed ? 0.92 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: _pressed
+                ? Colors.white.withOpacity(0.12)
+                : Colors.white.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: _pressed
+                  ? const Color(0xFF64B5F6).withOpacity(0.5)
+                  : Colors.white.withOpacity(0.1),
+            ),
+            boxShadow: _pressed
+                ? [
+                    BoxShadow(
+                      color: Colors.blueAccent.withOpacity(0.25),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    )
+                  ]
+                : [],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 18),
+                child: Row(
+                  children: [
+                    Icon(
+                      widget.icon,
+                      color: const Color(0xFF64B5F6),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 15),
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white24,
+                      size: 14,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class AnimatedLogoutButton extends StatefulWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const AnimatedLogoutButton({
+    super.key,
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  State<AnimatedLogoutButton> createState() => _AnimatedLogoutButtonState();
+}
+
+class _AnimatedLogoutButtonState extends State<AnimatedLogoutButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) {
+        _setPressed(false);
+        widget.onTap();
+      },
+      onTapCancel: () => _setPressed(false),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        scale: _pressed ? 0.94 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          decoration: BoxDecoration(
+            color: _pressed
+                ? Colors.redAccent.withOpacity(0.85)
+                : Colors.redAccent,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: _pressed
+                ? [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    )
+                  ]
+                : [],
+          ),
+          child: Center(
+            child: Text(
+              widget.text,
+              style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16),
+                fontSize: 16,
+              ),
+            ),
           ),
         ),
       ),

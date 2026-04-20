@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gestion_cliente/screens/inicio_screen.dart';
 
 import 'register_screen.dart';
 
@@ -15,31 +16,58 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  bool loading = false;
+  bool _isLoading = false;
 
   Future<void> login() async {
-    setState(() => loading = true);
-
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      print("USER AFTER LOGIN: ${FirebaseAuth.instance.currentUser}");
-    } on FirebaseAuthException catch (e) {
-      String mensaje = 'Error al iniciar sesión';
-
-      if (e.code == 'user-not-found') mensaje = 'Usuario no encontrado';
-      if (e.code == 'wrong-password') mensaje = 'Contraseña incorrecta';
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(mensaje)));
-    }
-
-    if (!mounted) return;
-    setState(() => loading = false);
+  // 1. Validación básica antes de disparar Firebase
+  if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+    _mostrarMensaje("Por favor, rellena todos los campos");
+    return;
   }
 
+  setState(() => _isLoading = true);
+
+  try {
+    // 2. Intento de inicio de sesión
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    // 3. Verificación de montaje
+    if (!mounted) return;
+
+    // 4. NAVEGACIÓN CRÍTICA:
+    // Usamos pushAndRemoveUntil para limpiar la memoria de la pantalla de login
+    // y evitar que el usuario pueda volver atrás al login con el botón del móvil.
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const PaginaInicio()),
+      (Route<dynamic> route) => false,
+    );
+
+  } on FirebaseAuthException catch (e) {
+    String errorMsg = "Ocurrió un error";
+    if (e.code == 'user-not-found') errorMsg = "Usuario no encontrado";
+    else if (e.code == 'wrong-password') errorMsg = "Contraseña incorrecta";
+    else if (e.code == 'invalid-email') errorMsg = "Email no válido";
+    
+    _mostrarMensaje(errorMsg);
+  } catch (e) {
+    _mostrarMensaje("Error inesperado: $e");
+  } finally {
+    // Solo quitamos el loading si seguimos en esta pantalla
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+}
+
+// Asegúrate de que el método se llame así o cámbialo en el catch
+void _mostrarMensaje(String msg) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
+  );
+}
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -89,21 +117,24 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 40),
 
                 _glassField(
-                  AnimatedTextField(
-                    label: 'Email',
-                    controller: emailController,
-                  ),
-                ),
+  AnimatedTextField(
+    label: 'Email',
+    controller: emailController,
+    textInputAction: TextInputAction.next,
+  ),
+),
 
                 const SizedBox(height: 20),
 
-                _glassField(
-                  AnimatedTextField(
-                    label: 'Contraseña',
-                    obscureText: true,
-                    controller: passwordController,
-                  ),
-                ),
+               _glassField(
+  AnimatedTextField(
+    label: 'Contraseña',
+    obscureText: true,
+    controller: passwordController,
+    textInputAction: TextInputAction.done, // Esto cambia el icono del teclado a un "Check" o "Done"
+    onSubmitted: login, // Al pulsar el botón del teclado, llama a login()
+  ),
+),
 
                 const SizedBox(height: 30),
 
@@ -131,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                     child: Center(
-                      child: loading
+                      child: _isLoading
                           ? const SizedBox(
                               width: 22,
                               height: 22,
@@ -205,11 +236,15 @@ class AnimatedTextField extends StatefulWidget {
   final String label;
   final bool obscureText;
   final TextEditingController controller;
+  final TextInputAction? textInputAction;
+  final VoidCallback? onSubmitted;
 
   const AnimatedTextField({
     required this.label,
     this.obscureText = false,
     required this.controller,
+    this.textInputAction,
+    this.onSubmitted,
     super.key,
   });
 
@@ -230,23 +265,32 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: widget.controller,
-      focusNode: _focusNode,
-      obscureText: widget.obscureText,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: TextStyle(
-          color: _hasFocus ? Colors.white : Colors.white70,
-        ),
-        border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 18,
-        ),
+Widget build(BuildContext context) {
+  return TextField(
+    controller: widget.controller,
+    focusNode: _focusNode,
+    obscureText: widget.obscureText,
+    textInputAction: widget.textInputAction, // 'next' para email, 'done' para password
+    
+    // Cambia/asegúrate de que esto esté así:
+    onSubmitted: (value) {
+      if (widget.onSubmitted != null) {
+        widget.onSubmitted!();
+      }
+    },
+    
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      labelText: widget.label,
+      labelStyle: TextStyle(
+        color: _hasFocus ? Colors.white : Colors.white70,
       ),
-    );
-  }
+      border: InputBorder.none,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 18,
+      ),
+    ),
+  );
+}
 }

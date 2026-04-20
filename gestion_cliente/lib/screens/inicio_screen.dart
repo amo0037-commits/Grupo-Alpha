@@ -125,7 +125,7 @@ class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderSt
             IconButton(
               icon: const Icon(Icons.logout, color: Colors.white70),
               onPressed: () => FirebaseAuth.instance.signOut(),
-            ),
+            ),  
             const SizedBox(width: 10),
           ],
         ),
