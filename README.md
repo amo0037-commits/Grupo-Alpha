@@ -1,7 +1,7 @@
 # Documentación AlphaApp
 
 
-PORTADA 
+P O R T A D A 
 
 El nombre de nuestra aplicación es Grupo Alpha , versión 1.0
 fue creada en Abril de 2026. actualmente se encuentra en fase de pruebas
