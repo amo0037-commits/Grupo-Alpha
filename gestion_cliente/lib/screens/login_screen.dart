@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  bool _buttonPressed = false;
   bool _isLoading = false;
 
   Future<void> login() async {
@@ -139,49 +140,77 @@ void _mostrarMensaje(String msg) {
                 const SizedBox(height: 30),
 
                 // BOTÓN
-                GestureDetector(
-                  onTap: login,
-                  child: Container(
-                    height: 55,
-                    width: double.infinity,
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF3B82F6),
-                          Color(0xFF60A5FA),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blueAccent.withOpacity(0.4),
-                          blurRadius: 15,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: Center(
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Iniciar sesión',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
+               GestureDetector(
+  onTapDown: (_) {
+    setState(() => _buttonPressed = true);
+  },
+  onTapUp: (_) {
+    setState(() => _buttonPressed = false);
+    login();
+  },
+  onTapCancel: () {
+    setState(() => _buttonPressed = false);
+  },
+  child: AnimatedScale(
+    duration: const Duration(milliseconds: 120),
+    curve: Curves.easeOut,
+    scale: _buttonPressed ? 0.96 : 1.0,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 120),
+      height: 55,
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 400),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: _buttonPressed
+              ? [
+                  const Color(0xFF2F6FE4),
+                  const Color(0xFF4D94FF),
+                ]
+              : [
+                  const Color(0xFF3B82F6),
+                  const Color(0xFF60A5FA),
+                ],
+        ),
+        boxShadow: _buttonPressed
+            ? [
+                BoxShadow(
+                  color: Colors.blueAccent.withOpacity(0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.blueAccent.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                )
+              ],
+      ),
+      child: Center(
+        child: _isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
                 ),
+              )
+            : const Text(
+                'Iniciar sesión',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+      ),
+    ),
+  ),
+),
 
                 const SizedBox(height: 20),
 

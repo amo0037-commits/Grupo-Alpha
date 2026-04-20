@@ -132,14 +132,61 @@ class ProfilePage extends StatelessWidget {
                  AnimatedLogoutButton(
   text: "Cerrar sesión",
   onTap: () async {
+  final bool? confirmar = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          "Cerrar sesión",
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          "¿Estás seguro de que quieres cerrar sesión?",
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+            ),
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: const Text(
+              "Cerrar sesión",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmar == true) {
     await FirebaseAuth.instance.signOut();
+
+    if (!context.mounted) return;
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => LoginPage()),
+      MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,
     );
-  },
+  }
+},
 ),
 
                   const SizedBox(height: 50),
