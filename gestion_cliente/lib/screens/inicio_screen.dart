@@ -263,18 +263,18 @@ class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderSt
                   duration: const Duration(milliseconds: 120),
                   decoration: BoxDecoration(
                     color: isPressed
-                        ? Colors.white.withOpacity(0.18)
-                        : Colors.white.withOpacity(0.10),
+                        ? Colors.white.withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
                       color: isPressed
-                          ? Colors.blueAccent.withOpacity(0.5)
-                          : Colors.white.withOpacity(0.2),
+                          ? Colors.blueAccent.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.2),
                     ),
                     boxShadow: isPressed
                         ? [
                             BoxShadow(
-                              color: Colors.blueAccent.withOpacity(0.25),
+                              color: Colors.blueAccent.withValues(alpha: 0.25),
                               blurRadius: 15,
                               offset: const Offset(0, 4),
                             )
@@ -354,13 +354,13 @@ class _AnimatedAppBarButtonState extends State<AnimatedAppBarButton> {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: _pressed
-                ? Colors.white.withOpacity(0.15)
+                ? Colors.white.withValues(alpha: 0.15)
                 : Colors.transparent,
             shape: BoxShape.circle,
             boxShadow: _pressed
                 ? [
                     BoxShadow(
-                      color: Colors.blueAccent.withOpacity(0.3),
+                      color: Colors.blueAccent.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     )
