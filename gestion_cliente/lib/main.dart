@@ -87,8 +87,7 @@ class AlphaApp extends StatelessWidget {
           return YogaPage(
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Yoga',
-          );
-          
+          );  
         },
         '/peluqueria': (context) {
           final args =

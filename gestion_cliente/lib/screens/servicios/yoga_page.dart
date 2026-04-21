@@ -296,14 +296,14 @@ class _YogaPageState extends State<YogaPage> {
                     // CALENDARIO (FIX "2 WEEKS")
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -361,17 +361,15 @@ class _YogaPageState extends State<YogaPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
-                        value: _claseSeleccionada.isEmpty
-                            ? null
-                            : _claseSeleccionada,
+                        initialValue: _claseSeleccionada.isEmpty ? null : _claseSeleccionada,
                         decoration: const InputDecoration(
                           labelText: 'Tipo de Yoga',
                           border: InputBorder.none,
@@ -400,17 +398,16 @@ class _YogaPageState extends State<YogaPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
-                        value: _horaSeleccionada.isEmpty
-                            ? null
-                            : _horaSeleccionada,
+                        initialValue: _horaSeleccionada.isEmpty ? null : _horaSeleccionada,
+                           
                         decoration: const InputDecoration(
                           labelText: 'Hora disponible',
                           border: InputBorder.none,
