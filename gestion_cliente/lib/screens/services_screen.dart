@@ -17,6 +17,9 @@ class ServicePage extends StatefulWidget {
 class _ServicePageState extends State<ServicePage> {
   final PageController _controller = PageController(viewportFraction: 0.65);
 
+
+  int? _pressedIndex;
+
   final services = const [
     {"image": "assets/images/peluqueriainfo2.png", "title": "Peluquería"},
     {"image": "assets/images/clinicafisioinfo.png", "title": "Clínica de fisioterapia"},
@@ -126,8 +129,29 @@ class _ServicePageState extends State<ServicePage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
 
-                    child: GestureDetector(
-                      onTap: () => _open(item["title"]!),
+                    child: Listener(
+  onPointerDown: (_) {
+    setState(() {
+      _pressedIndex = index;
+    });
+  },
+  onPointerUp: (_) {
+    setState(() {
+      _pressedIndex = null;
+    });
+  },
+  onPointerCancel: (_) {
+    setState(() {
+      _pressedIndex = null;
+    });
+  },
+
+  child: GestureDetector(
+    onTap: () => _open(item["title"]!),
+
+    child: AnimatedScale(
+      duration: const Duration(milliseconds: 150),
+      scale: _pressedIndex == index ? 0.94 : 1.0,
 
                       child: Container(
                         decoration: BoxDecoration(
@@ -202,6 +226,8 @@ class _ServicePageState extends State<ServicePage> {
                         ),
                       ),
                     ),
+                  ),
+                  ),
                   );
                 },
               ),
