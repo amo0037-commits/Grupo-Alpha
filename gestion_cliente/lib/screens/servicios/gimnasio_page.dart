@@ -225,7 +225,7 @@ class _GimnasioPageState extends State<GimnasioPage> {
                     // CALENDARIO
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(25),
                       ),
                       child: TableCalendar(
@@ -354,12 +354,12 @@ class _GimnasioPageState extends State<GimnasioPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
+        color: Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
       ),
       child: DropdownButtonFormField<String>(
         isExpanded: true,
-        value: value.isEmpty ? null : value,
+       initialValue: value.isEmpty ? null : value,
         decoration: const InputDecoration(
           labelText: '',
           border: InputBorder.none,

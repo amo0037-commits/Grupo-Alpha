@@ -105,7 +105,7 @@ class _ServicePageState extends State<ServicePage> {
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
                   shadows: [
-                    Shadow(color: neonBlue.withOpacity(0.9), blurRadius: 18),
+                    Shadow(color: neonBlue.withValues(alpha: 0.9), blurRadius: 18),
                     const Shadow(
                       color: Colors.black,
                       blurRadius: 10,
@@ -158,19 +158,19 @@ class _ServicePageState extends State<ServicePage> {
                           borderRadius: BorderRadius.circular(28),
 
                           // 🔥 GLOW AZUL MÁS POTENTE
-                         boxShadow: [
-                              BoxShadow(
-                         color: neonBlue.withOpacity(_pressedIndex == index ? 0.25 : 0.45),
-                         blurRadius: _pressedIndex == index ? 12 : 28,
-                         spreadRadius: _pressedIndex == index ? 1 : 2.5,
-                         offset: Offset(0, _pressedIndex == index ? 3 : 8),
-                      ),
-                              BoxShadow(
-                         color: Colors.black.withOpacity(0.25),
-                         blurRadius: _pressedIndex == index ? 6 : 12,
-                         offset: Offset(0, _pressedIndex == index ? 2 : 6),
-                      ),
-                    ],
+                          boxShadow: [
+                            BoxShadow(
+                             color: neonBlue.withValues(alpha: 0.45),
+                              blurRadius: 28,
+                              spreadRadius: 2.5,
+                              offset: const Offset(0, 8),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
 
                         child: ClipRRect(

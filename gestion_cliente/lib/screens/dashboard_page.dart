@@ -21,28 +21,13 @@ class _DashboardPageState extends State<DashboardPage>
   late TabController _tabController;
   int _currentIndex = 0;
 
- final Map<String, Map<String, String>> rutasServicios = const {
-  'Gimnasio': {
-    'ruta': '/gimnasio',
-    'servicio': 'Gimnasio',
-  },
-  'Yoga': {
-    'ruta': '/yoga',
-    'servicio': 'Yoga',
-  },
-  'Peluqueria': {
-    'ruta': '/peluqueria',
-    'servicio': 'Peluqueria',
-  },
-  'Fisioterapia': {
-    'ruta': '/fisioterapia',
-    'servicio': 'Fisioterapia',
-  },
-  'Academia': {
-    'ruta': '/academia',
-    'servicio': 'Academia',
-  },
-};
+  final Map<String, Map<String, String>> rutasServicios = const {
+    'Gimnasio': {'ruta': '/gimnasio', 'servicio': 'Gimnasio'},
+    'Yoga': {'ruta': '/yoga', 'servicio': 'Yoga'},
+    'Peluqueria': {'ruta': '/peluqueria', 'servicio': 'Peluqueria'},
+    'Fisioterapia': {'ruta': '/fisioterapia', 'servicio': 'Fisioterapia'},
+    'Academia': {'ruta': '/academia', 'servicio': 'Academia'},
+  };
 
   final Map<String, bool> _hoveringServicios = {};
 
@@ -104,26 +89,31 @@ class _DashboardPageState extends State<DashboardPage>
               onTap: () {
                 final data = rutasServicios[negocio];
                 if (data != null) {
-                  Navigator.pushNamed(context, data['ruta']!, arguments: {
-                    'userId': FirebaseAuth.instance.currentUser!.uid,
-                    'negocio': data['servicio']!,
-                  });
+                  Navigator.pushNamed(
+                    context,
+                    data['ruta']!,
+                    arguments: {
+                      'userId': FirebaseAuth.instance.currentUser!.uid,
+                      'negocio': data['servicio']!,
+                    },
+                  );
                 }
               },
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                   ),
                 ),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
-                    backgroundColor:
-                        const Color(0xFF64B5F6).withOpacity(0.15),
+                    backgroundColor: const Color(
+                      0xFF64B5F6,
+                    ).withValues(alpha: 0.15),
                     child: Icon(
                       getIcono(negocio),
                       color: const Color(0xFF64B5F6),
@@ -170,11 +160,7 @@ class _DashboardPageState extends State<DashboardPage>
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF1E293B),
-                Color(0xFF334155),
-                Color(0xFF64B5F6),
-              ],
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
             ),
           ),
         ),
@@ -187,8 +173,11 @@ class _DashboardPageState extends State<DashboardPage>
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline,
-                size: sizeIcono, color: Colors.white),
+            icon: Icon(
+              Icons.info_outline,
+              size: sizeIcono,
+              color: Colors.white,
+            ),
             onPressed: () {
               Navigator.push(
                 context,
@@ -197,8 +186,7 @@ class _DashboardPageState extends State<DashboardPage>
             },
           ),
           IconButton(
-            icon: Icon(Icons.person,
-                size: sizeIcono, color: Colors.white),
+            icon: Icon(Icons.person, size: sizeIcono, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -211,7 +199,7 @@ class _DashboardPageState extends State<DashboardPage>
           controller: _tabController,
           indicator: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
           ),
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
@@ -222,18 +210,13 @@ class _DashboardPageState extends State<DashboardPage>
         ),
       ),
 
-      
       body: SizedBox.expand(
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF1E293B),
-                Color(0xFF334155),
-                Color(0xFF64B5F6),
-              ],
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
             ),
           ),
           child: SafeArea(
@@ -262,10 +245,10 @@ class _DashboardPageState extends State<DashboardPage>
                 padding: const EdgeInsets.all(20),
                 margin: const EdgeInsets.only(bottom: 30),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                   ),
                 ),
                 child: Column(
@@ -289,11 +272,96 @@ class _DashboardPageState extends State<DashboardPage>
             spacing: 20,
             runSpacing: 20,
             children: widget.negocios
-                .map((n) => buildAnimatedServiceCard(
-                    n, screenWidth > 800 ? 300 : screenWidth * 0.95))
+                .map(
+                  (n) => buildAnimatedServiceCard(
+                    n,
+                    screenWidth > 800 ? 300 : screenWidth * 0.95,
+                  ),
+                )
                 .toList(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReservaCard(
+    String servicio,
+    String clase,
+    String hora,
+    DateTime fecha,
+    QueryDocumentSnapshot doc,
+    double screenWidth,
+  ) {
+    return Center(
+      child: SizedBox(
+        width: screenWidth > 800 ? 500 : screenWidth * 0.95,
+        child: Card(
+          color: const Color(0xFF93C5FD),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ListTile(
+            title: Text(servicio),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(clase),
+                Text('📅 ${DateFormat('dd/MM/yyyy').format(fecha)}'),
+                Text('⏰ $hora'),
+              ],
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Eliminar reserva'),
+                    content: const Text(
+                      '¿Seguro que quieres eliminar esta reserva?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        child: const Text('Eliminar'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm != true) return;
+
+                HapticFeedback.mediumImpact();
+
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('reservas')
+                      .doc(doc.id)
+                      .delete();
+
+                  if (!mounted) return; // 👈 IMPORTANTE: usa mounted del STATE
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Reserva eliminada correctamente'),
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al eliminar: $e')),
+                  );
+                }
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -313,127 +381,41 @@ class _DashboardPageState extends State<DashboardPage>
           );
         }
 
-       
-   Widget _buildReservaCard(
-  String servicio,
-  String clase,
-  String hora,
-  DateTime fecha,
-  QueryDocumentSnapshot doc,
-  double screenWidth,
-) {
-  return Center(
-    child: SizedBox(
-      width: screenWidth > 800 ? 500 : screenWidth * 0.95,
-      child: Card(
-        color: const Color(0xFF93C5FD),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: ListTile(
-          title: Text(servicio),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(clase),
-              Text('📅 ${DateFormat('dd/MM/yyyy').format(fecha)}'),
-              Text('⏰ $hora'),
-            ],
-          ),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Eliminar reserva'),
-                  content: const Text(
-                      '¿Seguro que quieres eliminar esta reserva?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancelar'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text(
-                        'Eliminar',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-
-              if (confirm == true) {
-                HapticFeedback.mediumImpact();
-
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('reservas')
-                      .doc(doc.id)
-                      .delete();
-
-                  if (!mounted) return;
-
-                  Future.microtask(() {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Reserva eliminada correctamente'),
-                      ),
-                    );
-                  });
-                } catch (e) {
-                  if (!mounted) return;
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error al eliminar: $e'),
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-
-
         final reservas = snapshot.data!.docs;
 
-       return AnimatedSwitcher(
-  duration: const Duration(milliseconds: 300),
-  child: reservas.isEmpty
-      ? const Center(
-          key: ValueKey('empty'),
-          child: Text(
-            'No tienes reservas activas',
-            style: TextStyle(color: Colors.white),
-          ),
-        )
-      : ListView.builder(
-          key: const ValueKey('list'),
-          padding: const EdgeInsets.all(16),
-          itemCount: reservas.length,
-          itemBuilder: (context, index) {
-            final data = reservas[index].data();
-            final servicio = data['servicio'];
-            final clase = data['clase'];
-            final hora = data['hora'];
-            final fecha =
-                (data['fecha'] as Timestamp).toDate();
-            final doc = reservas[index];
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: reservas.isEmpty
+              ? const Center(
+                  key: ValueKey('empty'),
+                  child: Text(
+                    'No tienes reservas activas',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                )
+              : ListView.builder(
+                  key: const ValueKey('list'),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: reservas.length,
+                  itemBuilder: (context, index) {
+                    final data = reservas[index].data();
+                    final servicio = data['servicio'];
+                    final clase = data['clase'];
+                    final hora = data['hora'];
+                    final fecha = (data['fecha'] as Timestamp).toDate();
+                    final doc = reservas[index];
 
-            return _buildReservaCard(
-                servicio, clase, hora, fecha, doc, screenWidth);
-          },
-        ),
-);
-
+                    return _buildReservaCard(
+                      servicio,
+                      clase,
+                      hora,
+                      fecha,
+                      doc,
+                      screenWidth,
+                    );
+                  },
+                ),
+        );
       },
     );
   }
@@ -461,13 +443,15 @@ class _FloatingHandState extends State<FloatingHand>
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
 
-    _moveAnim = Tween<double>(begin: -6, end: 6).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _moveAnim = Tween<double>(
+      begin: -6,
+      end: 6,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _rotateAnim = Tween<double>(begin: -0.25, end: 0.25).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _rotateAnim = Tween<double>(
+      begin: -0.25,
+      end: 0.25,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -483,17 +467,10 @@ class _FloatingHandState extends State<FloatingHand>
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(_moveAnim.value, 0),
-          child: Transform.rotate(
-            angle: _rotateAnim.value,
-            child: child,
-          ),
+          child: Transform.rotate(angle: _rotateAnim.value, child: child),
         );
       },
-      child: const Icon(
-        Icons.waving_hand,
-        size: 40,
-        color: Color(0xFF64B5F6),
-      ),
+      child: const Icon(Icons.waving_hand, size: 40, color: Color(0xFF64B5F6)),
     );
   }
 }
