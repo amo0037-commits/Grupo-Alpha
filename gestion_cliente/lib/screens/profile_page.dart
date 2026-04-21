@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:gestion_cliente/screens/inicio_screen.dart';
 import 'package:gestion_cliente/screens/login_screen.dart';
 
+
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -19,7 +20,6 @@ class ProfilePage extends StatelessWidget {
     "assets/images/tazaperfil.png",
     "assets/images/tazasuciaperfil.png",
   ];
-
 
   @override
   Widget build(BuildContext context) {
@@ -252,76 +252,95 @@ class ProfilePage extends StatelessWidget {
 
         return Column(
           children: [
-            GestureDetector(
-              onTap: () {
-                _showAvatarPicker(context, user.uid);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.blueAccent
-                        .withOpacity(0.5),
-                    width: 2,
-                  ),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 600),
-                  transitionBuilder: (child, animation) {
-                    final bounceAnimation =
-                        TweenSequence<double>([
-                      TweenSequenceItem(
-                        tween: Tween(begin: 0.8, end: 1.2)
-                            .chain(CurveTween(
-                                curve: Curves.easeOut)),
-                        weight: 40,
-                      ),
-                      TweenSequenceItem(
-                        tween: Tween(begin: 1.2, end: 0.95)
-                            .chain(CurveTween(
-                                curve: Curves.easeInOut)),
-                        weight: 30,
-                      ),
-                      TweenSequenceItem(
-                        tween: Tween(begin: 0.95, end: 1.0)
-                            .chain(CurveTween(
-                                curve: Curves.easeOut)),
-                        weight: 30,
-                      ),
-                    ]).animate(animation);
+            StatefulBuilder(
+  builder: (context, setState) {
+    double scale = 1.0;
 
-                    return FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(
-                        scale: bounceAnimation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
-                    key: ValueKey(avatarUrl ?? iniciales), // 🔥 clave
-                    radius: 45,
-                    backgroundColor:
-                        const Color(0xFF64B5F6),
-                    backgroundImage: avatarUrl != null
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            iniciales,
-                            style: const TextStyle(
-                              fontSize: 30,
-                              color: Colors.white,
-                              fontWeight:
-                                  FontWeight.bold,
-                            ),
-                          )
-                        : null,
-                  ),
-                ),
-              ),
+    void animateTap() async {
+      setState(() => scale = 0.9);
+      await Future.delayed(const Duration(milliseconds: 100));
+      setState(() => scale = 1.05);
+      await Future.delayed(const Duration(milliseconds: 100));
+      setState(() => scale = 1.0);
+    }
+
+    return GestureDetector(
+      onTap: () async {
+  setState(() => scale = 0.9);
+  await Future.delayed(const Duration(milliseconds: 100));
+
+  setState(() => scale = 1.05);
+  await Future.delayed(const Duration(milliseconds: 100));
+
+  setState(() => scale = 1.0);
+
+  _showAvatarPicker(context, user.uid);
+},
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        child: Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.blueAccent.withOpacity(0.5),
+              width: 2,
             ),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 600),
+            transitionBuilder: (child, animation) {
+              final bounceAnimation = TweenSequence<double>([
+                TweenSequenceItem(
+                  tween: Tween(begin: 0.8, end: 1.2)
+                      .chain(CurveTween(curve: Curves.easeOut)),
+                  weight: 40,
+                ),
+                TweenSequenceItem(
+                  tween: Tween(begin: 1.2, end: 0.95)
+                      .chain(CurveTween(curve: Curves.easeInOut)),
+                  weight: 30,
+                ),
+                TweenSequenceItem(
+                  tween: Tween(begin: 0.95, end: 1.0)
+                      .chain(CurveTween(curve: Curves.easeOut)),
+                  weight: 30,
+                ),
+              ]).animate(animation);
+
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: bounceAnimation,
+                  child: child,
+                ),
+              );
+            },
+            child: CircleAvatar(
+              key: ValueKey(avatarUrl ?? iniciales),
+              radius: 45,
+              backgroundColor: const Color(0xFF64B5F6),
+              backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl == null
+                  ? Text(
+                      iniciales,
+                      style: const TextStyle(
+                        fontSize: 30,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  },
+),
             const SizedBox(height: 15),
             Text(
               nombreCompleto,
