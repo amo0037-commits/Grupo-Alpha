@@ -19,7 +19,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
     {"title": "Yoga Suave", "image": "assets/images/yoga4.jpg"},
     {"title": "Vinyasa", "image": "assets/images/yoga.jpg"},
     {"title": "Power Yoga", "image": "assets/images/yoga2.jpg"},
-    {"title": "Meditacion", "image": "assets/images/meditacion.jpg"},
+    {"title": "Meditación", "image": "assets/images/meditacion.jpg"},
   ];
 
   final List<Map<String, String>> refuerzo = [
@@ -239,7 +239,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 16),
                                     child: Text(
-                                      "Relaja cuerpo y mente",
+                                      "Relaja tu cuerpo",
                                       style: TextStyle(
                                         color: agua,
                                         fontSize: 24,

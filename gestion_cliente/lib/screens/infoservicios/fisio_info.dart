@@ -7,9 +7,10 @@ class FisioInfo extends StatefulWidget {
   State<FisioInfo> createState() => _FisioInfoState();
 }
 
-class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMixin {
+class _FisioInfoState extends State<FisioInfo>
+    with SingleTickerProviderStateMixin {
   final Color neonBlue = const Color(0xFF64B5F6);
- final Color neonPurpleBright = const Color(0xFF9575FF);
+  final Color neonPurpleBright = const Color(0xFF9575FF);
 
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -22,8 +23,14 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
   ];
 
   final List<Map<String, String>> refuerzo = [
-    {"title": "Máquinas especializadas", "image": "assets/images/maquinafisio.jpg"},
-    {"title": "Tratamientos personalizados", "image": "assets/images/tratamientofisio.jpg"},
+    {
+      "title": "Máquinas especializadas",
+      "image": "assets/images/maquinafisio.jpg",
+    },
+    {
+      "title": "Tratamientos personalizados",
+      "image": "assets/images/tratamientofisio.jpg",
+    },
     {"title": "Rehabilitación", "image": "assets/images/rehabilitacion.jpg"},
   ];
 
@@ -55,7 +62,6 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
     super.dispose();
   }
 
- 
   String _getDescription(String title) {
     switch (title) {
       case "Especialista 1":
@@ -63,34 +69,32 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
       case "Especialista 2":
         return "María, especialista en electroterapia dentro del ámbito de la fisioterapia. Aplica tratamientos con corrientes terapéuticas, ultrasonidos y técnicas complementarias para mejorar la recuperación de lesiones y optimizar la función muscular.";
       case "Especialista 3":
-        return "Raúl, especialista en terapia manual y fisioterapia neurológica. Trabaja en la rehabilitación de pacientes con afecciones del sistema nervioso y lesiones musculoesqueléticas, utilizando técnicas manuales avanzadas para mejorar la funcionalidad y la calidad de vida.";  
+        return "Raúl, especialista en terapia manual y fisioterapia neurológica. Trabaja en la rehabilitación de pacientes con afecciones del sistema nervioso y lesiones musculoesqueléticas, utilizando técnicas manuales avanzadas para mejorar la funcionalidad y la calidad de vida.";
       case "Máquinas especializadas":
         return "Contamos con tecnología avanzada de fisioterapia diseñada para potenciar la recuperación y mejorar los resultados de cada tratamiento de forma segura y eficaz.\n\n"
-"Incorporamos equipos de electroterapia, que ayudan a aliviar el dolor, reducir la inflamación y estimular la regeneración muscular mediante corrientes terapéuticas controladas.\n\n"
-"Disponemos de ultrasonido terapéutico, utilizado para tratar lesiones profundas de tejidos blandos, mejorando la circulación y acelerando los procesos de recuperación.\n\n"
-"Nuestras máquinas de láser terapéutico permiten actuar sobre zonas específicas del cuerpo, favoreciendo la regeneración celular y la disminución del dolor crónico o agudo.\n\n"
-"Además, contamos con equipos de magnetoterapia, que utilizan campos magnéticos para mejorar la consolidación ósea y reducir procesos inflamatorios.\n\n"
-"Incluimos sistemas de presoterapia, ideales para mejorar la circulación, reducir la retención de líquidos y favorecer la recuperación muscular.\n\n"
-"Nuestro objetivo es combinar la tecnología con la atención personalizada para ofrecer tratamientos más precisos, efectivos y adaptados a cada paciente.";
-           
+            "Incorporamos equipos de electroterapia, que ayudan a aliviar el dolor, reducir la inflamación y estimular la regeneración muscular mediante corrientes terapéuticas controladas.\n\n"
+            "Disponemos de ultrasonido terapéutico, utilizado para tratar lesiones profundas de tejidos blandos, mejorando la circulación y acelerando los procesos de recuperación.\n\n"
+            "Nuestras máquinas de láser terapéutico permiten actuar sobre zonas específicas del cuerpo, favoreciendo la regeneración celular y la disminución del dolor crónico o agudo.\n\n"
+            "Además, contamos con equipos de magnetoterapia, que utilizan campos magnéticos para mejorar la consolidación ósea y reducir procesos inflamatorios.\n\n"
+            "Nuestro objetivo es combinar la tecnología con la atención personalizada para ofrecer tratamientos más precisos, efectivos y adaptados a cada paciente.";
+
       case "Tratamientos personalizados":
         return "Ofrecemos tratamientos de fisioterapia personalizados diseñados a partir de una valoración inicial completa de cada paciente, teniendo en cuenta su lesión, estado físico y objetivos de recuperación.\n\n"
-"Cada plan de tratamiento se adapta de forma individual, combinando terapia manual, ejercicio terapéutico y técnicas avanzadas para conseguir una recuperación más eficaz y segura.\n\n"
-"Realizamos un seguimiento continuo para evaluar la evolución del paciente y ajustar el tratamiento en función de sus progresos, garantizando una atención totalmente adaptada.\n\n"
-"Nuestro enfoque busca no solo aliviar el dolor o tratar la lesión, sino también mejorar la funcionalidad, prevenir recaídas y optimizar el bienestar general del paciente.\n\n"
-"El objetivo es ofrecer un tratamiento único para cada persona, centrado en una recuperación completa, progresiva y duradera.";
+            "Cada plan de tratamiento se adapta de forma individual, combinando terapia manual, ejercicio terapéutico y técnicas avanzadas para conseguir una recuperación más eficaz y segura.\n\n"
+            "Realizamos un seguimiento continuo para evaluar la evolución del paciente y ajustar el tratamiento en función de sus progresos, garantizando una atención totalmente adaptada.\n\n"
+            "Nuestro enfoque busca no solo aliviar el dolor o tratar la lesión, sino también mejorar la funcionalidad, prevenir recaídas y optimizar el bienestar general del paciente.\n\n"
+            "El objetivo es ofrecer un tratamiento único para cada persona, centrado en una recuperación completa, progresiva y duradera.";
       case "Rehabilitación":
         return "Nuestro servicio de rehabilitación está enfocado en la recuperación funcional del paciente tras lesiones, cirugías o procesos dolorosos que afectan al sistema musculoesquelético.\n\n"
-"Aplicamos un enfoque progresivo que combina terapia manual, ejercicio terapéutico y técnicas avanzadas de fisioterapia para restaurar la movilidad, la fuerza y la funcionalidad.\n\n"
-"Cada tratamiento se diseña de forma individualizada, adaptándose a la evolución del paciente y a sus necesidades específicas en cada fase de la recuperación.\n\n"
-"Acompañamos al paciente durante todo el proceso, con un seguimiento continuo que garantiza una recuperación segura, eficaz y adaptada a sus objetivos.\n\n"
-"Nuestro objetivo es devolver la autonomía y mejorar la calidad de vida, reduciendo el dolor y previniendo futuras recaídas.";
+            "Aplicamos un enfoque progresivo que combina terapia manual, ejercicio terapéutico y técnicas avanzadas de fisioterapia para restaurar la movilidad, la fuerza y la funcionalidad.\n\n"
+            "Cada tratamiento se diseña de forma individualizada, adaptándose a la evolución del paciente y a sus necesidades específicas en cada fase de la recuperación.\n\n"
+            "Acompañamos al paciente durante todo el proceso, con un seguimiento continuo que garantiza una recuperación segura, eficaz y adaptada a sus objetivos.\n\n"
+            "Nuestro objetivo es devolver la autonomía y mejorar la calidad de vida, reduciendo el dolor y previniendo futuras recaídas.";
       default:
         return "Información no disponible.";
     }
   }
 
-  
   void _showInfoDialog(String title) {
     final description = _getDescription(title);
 
@@ -220,39 +224,49 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
                                 horizontal: 16,
                               ),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Text(
-                                      "Alivimos tu dolor, restauramos tu bienestar",
-                                      style: TextStyle(
-                                        color: neonPurpleBright,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [
-                                          Shadow(
-                                            color: neonPurpleBright,
-                                            blurRadius: 10,
-                                          ),
-                                          const Shadow(
-                                            color: Colors.black,
-                                            blurRadius: 8,
-                                            offset: Offset(2, 2),
-                                          ),
-                                        ],
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 16,
+                                      ),
+                                      child: Text(
+                                        "Restauramos tu bienestar",
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        softWrap: true,
+                                        style: TextStyle(
+                                          color: neonPurpleBright,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          shadows: [
+                                            Shadow(
+                                              color: neonPurpleBright,
+                                              blurRadius: 10,
+                                            ),
+                                            const Shadow(
+                                              color: Colors.black,
+                                              blurRadius: 8,
+                                              offset: Offset(2, 2),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
+
+                                  const SizedBox(width: 12),
+
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Container(
                                       decoration: BoxDecoration(
                                         boxShadow: [
                                           BoxShadow(
-                                            color: neonPurpleBright.withOpacity(0.25),
+                                            color: neonPurpleBright.withOpacity(
+                                              0.25,
+                                            ),
                                             blurRadius: 18,
                                             spreadRadius: 1,
                                           ),
@@ -273,19 +287,18 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
                     ),
                   ),
 
-                  
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 6,
                     ),
                     child: Text(
-"Ofrecemos un servicio integral de fisioterapia orientado a mejorar la calidad de vida de cada paciente mediante tratamientos personalizados y basados en la evidencia.\n\n"
-"Realizamos terapias de rehabilitación física centradas en la recuperación progresiva de lesiones musculares y articulares, trabajando desde la fase inicial hasta la completa readaptación funcional.\n\n"
-"En el área de fisioterapia deportiva, ayudamos a prevenir y tratar lesiones, optimizando el rendimiento físico a través de técnicas específicas y programas adaptados a cada disciplina.\n\n"
-"Nuestros tratamientos incluyen terapia manual, ejercicios terapéuticos y técnicas avanzadas para aliviar el dolor, mejorar la movilidad y acelerar la recuperación.\n\n"
-"Además, ofrecemos sesiones individualizadas donde el paciente recibe atención directa, seguimiento continuo y orientación para mejorar sus hábitos posturales y su bienestar diario.\n\n"
-"Nuestro objetivo es no solo tratar la lesión, sino también prevenir futuras dolencias y promover una recuperación eficaz, segura y duradera.",
+                      "Ofrecemos un servicio integral de fisioterapia orientado a mejorar la calidad de vida de cada paciente mediante tratamientos personalizados y basados en la evidencia.\n\n"
+                      "Realizamos terapias de rehabilitación física centradas en la recuperación progresiva de lesiones musculares y articulares, trabajando desde la fase inicial hasta la completa readaptación funcional.\n\n"
+                      "En el área de fisioterapia deportiva, ayudamos a prevenir y tratar lesiones, optimizando el rendimiento físico a través de técnicas específicas y programas adaptados a cada disciplina.\n\n"
+                      "Nuestros tratamientos incluyen terapia manual, ejercicios terapéuticos y técnicas avanzadas para aliviar el dolor, mejorar la movilidad y acelerar la recuperación.\n\n"
+                      "Además, ofrecemos sesiones individualizadas donde el paciente recibe atención directa, seguimiento continuo y orientación para mejorar sus hábitos posturales y su bienestar diario.\n\n"
+                      "Nuestro objetivo es no solo tratar la lesión, sino también prevenir futuras dolencias y promover una recuperación eficaz, segura y duradera.",
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.85),
                         fontSize: 15,
@@ -314,7 +327,6 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
     );
   }
 
-  
   Widget _sectionTitle(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -333,7 +345,6 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
     );
   }
 
-  
   Widget _horizontalList(List<Map<String, String>> items) {
     return SizedBox(
       height: 210,
@@ -354,7 +365,6 @@ class _FisioInfoState extends State<FisioInfo>  with SingleTickerProviderStateMi
     );
   }
 }
-
 
 class _HoverCard extends StatefulWidget {
   final String title;
