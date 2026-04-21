@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:gestion_cliente/notifications_service.dart';
 
 class YogaPage extends StatefulWidget {
   final String userId;
@@ -170,6 +171,15 @@ class _YogaPageState extends State<YogaPage> {
         return;
       }
 
+      final partesHora = _horaSeleccionada.split(':');
+      final fechaCompleta = DateTime(
+        fechaBusqueda.year,
+        fechaBusqueda.month,
+        fechaBusqueda.day,
+        int.parse(partesHora[0]),
+        int.parse(partesHora[1]),
+      );
+
       await FirebaseFirestore.instance.collection('reservas').add({
         'userId': widget.userId,
         'servicio': widget.negocio,
@@ -177,6 +187,7 @@ class _YogaPageState extends State<YogaPage> {
         'hora': _horaSeleccionada,
         'clase': _claseSeleccionada,
         'estado': 'activa',
+        'fechaHora': Timestamp.fromDate(fechaCompleta),
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -190,6 +201,18 @@ class _YogaPageState extends State<YogaPage> {
       });
 
       _fetchBlockedDays();
+
+      try {
+        await NotificationsService.scheduleNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          servicio: widget.negocio,
+          especialista: _claseSeleccionada,
+          scheduledDate: fechaCompleta,
+        );
+      } catch (e) {
+        debugPrint('Error al programar notificación: $e');
+      }
+
     } catch (e) {
       _mensaje("Error: $e");
     } finally {

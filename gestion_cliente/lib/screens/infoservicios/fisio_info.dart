@@ -13,8 +13,7 @@ class _FisioInfoState extends State<FisioInfo>
   final Color neonPurpleBright = const Color(0xFF9575FF);
 
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+  // ← _fadeAnimation y _scaleAnimation eliminados — no se usaban
 
   final List<Map<String, String>> clases = [
     {"title": "Especialista 1", "image": "assets/images/especialista1.jpg"},
@@ -43,16 +42,6 @@ class _FisioInfoState extends State<FisioInfo>
       duration: const Duration(milliseconds: 900),
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.92,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
     _controller.forward();
   }
 
@@ -77,7 +66,6 @@ class _FisioInfoState extends State<FisioInfo>
             "Nuestras máquinas de láser terapéutico permiten actuar sobre zonas específicas del cuerpo, favoreciendo la regeneración celular y la disminución del dolor crónico o agudo.\n\n"
             "Además, contamos con equipos de magnetoterapia, que utilizan campos magnéticos para mejorar la consolidación ósea y reducir procesos inflamatorios.\n\n"
             "Nuestro objetivo es combinar la tecnología con la atención personalizada para ofrecer tratamientos más precisos, efectivos y adaptados a cada paciente.";
-
       case "Tratamientos personalizados":
         return "Ofrecemos tratamientos de fisioterapia personalizados diseñados a partir de una valoración inicial completa de cada paciente, teniendo en cuenta su lesión, estado físico y objetivos de recuperación.\n\n"
             "Cada plan de tratamiento se adapta de forma individual, combinando terapia manual, ejercicio terapéutico y técnicas avanzadas para conseguir una recuperación más eficaz y segura.\n\n"
@@ -112,7 +100,7 @@ class _FisioInfoState extends State<FisioInfo>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6), // ← fix
                     blurRadius: 25,
                   ),
                 ],
@@ -192,7 +180,7 @@ class _FisioInfoState extends State<FisioInfo>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🎬 BANNER
+                  // ── Banner ─────────────────────────────────────────────
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: ClipRRect(
@@ -212,7 +200,7 @@ class _FisioInfoState extends State<FisioInfo>
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.75),
+                                  Colors.black.withValues(alpha: 0.75), // ← fix
                                   Colors.transparent,
                                 ],
                               ),
@@ -264,9 +252,7 @@ class _FisioInfoState extends State<FisioInfo>
                                       decoration: BoxDecoration(
                                         boxShadow: [
                                           BoxShadow(
-                                            color: neonPurpleBright.withOpacity(
-                                              0.25,
-                                            ),
+                                            color: neonPurpleBright.withValues(alpha: 0.25), // ← fix
                                             blurRadius: 18,
                                             spreadRadius: 1,
                                           ),
@@ -300,7 +286,7 @@ class _FisioInfoState extends State<FisioInfo>
                       "Además, ofrecemos sesiones individualizadas donde el paciente recibe atención directa, seguimiento continuo y orientación para mejorar sus hábitos posturales y su bienestar diario.\n\n"
                       "Nuestro objetivo es no solo tratar la lesión, sino también prevenir futuras dolencias y promover una recuperación eficaz, segura y duradera.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85), // ← fix
                         fontSize: 15,
                         height: 1.5,
                       ),
