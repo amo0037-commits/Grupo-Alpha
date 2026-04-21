@@ -30,6 +30,7 @@ void main() async {
 
 
 class AuthWrapper extends StatelessWidget {
+    const AuthWrapper({super.key});
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -89,7 +90,15 @@ class AlphaApp extends StatelessWidget {
           );
           
         },
-        '/peluqueria': (context) => PeluqueriaPage(),
+        '/peluqueria': (context) {
+          final args =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>?;
+          return PeluqueriaPage(
+            userId: args?['userId'] ?? '',
+            negocio: args?['negocio'] ?? 'Peluqueria',
+          );
+        },
         '/fisioterapia': (context) {
           final args =
               ModalRoute.of(context)!.settings.arguments
