@@ -80,10 +80,17 @@ class AlphaApp extends StatelessWidget {
           return YogaPage(
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Yoga',
-          );
-          
+          );  
         },
-        '/peluqueria': (context) => PeluqueriaPage(userId: '', negocio: 'Peluqueria'), 
+        '/peluqueria': (context) {
+            final args = 
+               ModalRoute.of(context)!.settings.arguments
+                   as Map<String, dynamic>?;
+                   return PeluqueriaPage(
+                    userId: args?['userId'] ?? '',
+                    negocio: args?['negocio'] ?? 'Peluqueria',
+                    );
+            },
         '/fisioterapia': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return FisioterapiaPage(
