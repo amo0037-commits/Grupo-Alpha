@@ -22,7 +22,6 @@ class _YogaPageState extends State<YogaPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  List<DateTime> _blockedDays = [];
   List<String> _horasDisponibles = [];
 
   String _horaSeleccionada = '';
@@ -68,7 +67,6 @@ class _YogaPageState extends State<YogaPage> {
 
       if (mounted) {
         setState(() {
-          _blockedDays = blocked;
         });
       }
     } catch (e) {

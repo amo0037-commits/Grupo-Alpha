@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
   // obtener token del dispositivo
   String? token = await messaging.getToken();
 
-  print("FCM TOKEN: $token");
+  debugPrint("FCM TOKEN: $token");
 
   if (token != null) {
     await FirebaseFirestore.instance
@@ -71,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (e.code == 'user-not-found') mensaje = 'Usuario no encontrado';
       if (e.code == 'wrong-password') mensaje = 'Contraseña incorrecta';
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(mensaje)));
