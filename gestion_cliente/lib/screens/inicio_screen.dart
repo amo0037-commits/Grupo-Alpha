@@ -107,35 +107,25 @@ class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderSt
             ),
           ),
           actions: [
-            AnimatedAppBarButton(
-  icon: Icons.search, size: iconSize,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ReservaPage()),
-    );
-  },
-),
-           AnimatedAppBarButton(
-  icon: Icons.info_outline, size: iconSize,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ServicePage()),
-    );
-  },
-),
-
-AnimatedAppBarButton(
-  icon: Icons.person, size: iconSize,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ProfilePage()),
-    );
-  },
-),
-
+            IconButton(
+              icon: Icon(Icons.search, size: iconSize, color: Colors.white),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => const ReservaPage())),
+            ),
+            IconButton(
+              icon: Icon(Icons.info_outline, size: iconSize, color: Colors.white),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => const ServicePage())),
+            ),
+            IconButton(
+              icon: Icon(Icons.person, size: iconSize, color: Colors.white),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => const ProfilePage())),
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white70),
+              onPressed: () => FirebaseAuth.instance.signOut(),
+            ),
             const SizedBox(width: 10),
           ],
         ),
