@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:gestion_cliente/notifications_service.dart';
 
 class GimnasioPage extends StatefulWidget {
   final String userId;
@@ -111,6 +112,17 @@ class _GimnasioPageState extends State<GimnasioPage> {
       _selectedDay!.day,
     );
 
+    // ── fechaCompleta para notificación ────────────────────
+    final partesHora = _horaSeleccionada.split(':');
+    final fechaCompleta = DateTime(
+      fecha.year,
+      fecha.month,
+      fecha.day,
+      int.parse(partesHora[0]),
+      int.parse(partesHora[1]),
+    );
+    // ───────────────────────────────────────────────────────
+
     final check = await FirebaseFirestore.instance
         .collection('reservas')
         .where('servicio', isEqualTo: widget.negocio)
@@ -139,6 +151,7 @@ class _GimnasioPageState extends State<GimnasioPage> {
       'hora': _horaSeleccionada,
       'clase': _actividadSeleccionada,
       'estado': 'activa',
+      'fechaHora': Timestamp.fromDate(fechaCompleta), // ← añadido
       'timestamp': FieldValue.serverTimestamp(),
     });
 
@@ -150,6 +163,19 @@ class _GimnasioPageState extends State<GimnasioPage> {
       _actividadSeleccionada = '';
       _horasDisponibles = List.from(horariosTotales);
     });
+
+    // ── Programar notificación ──────────────────────────────
+    try {
+      await NotificationsService.scheduleNotification(
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        servicio: widget.negocio,
+        especialista: _actividadSeleccionada,
+        scheduledDate: fechaCompleta,
+      );
+    } catch (e) {
+      debugPrint('Error al programar notificación: $e');
+    }
+    // ────────────────────────────────────────────────────────
 
     if (mounted) setState(() => _loading = false);
   }
@@ -225,7 +251,7 @@ class _GimnasioPageState extends State<GimnasioPage> {
                     // CALENDARIO
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(25),
                       ),
                       child: TableCalendar(
@@ -354,12 +380,12 @@ class _GimnasioPageState extends State<GimnasioPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
+        color: Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
       ),
       child: DropdownButtonFormField<String>(
         isExpanded: true,
-        value: value.isEmpty ? null : value,
+        initialValue: value.isEmpty ? null : value,
         decoration: const InputDecoration(
           labelText: '',
           border: InputBorder.none,
