@@ -550,7 +550,7 @@ class _DropdownCard extends StatelessWidget {
       child: DropdownButtonFormField<String>(
         isExpanded: true,
         alignment: AlignmentDirectional.center,
-        value: value,
+        initialValue: value,
         decoration: const InputDecoration(
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
