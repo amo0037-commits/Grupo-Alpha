@@ -40,17 +40,6 @@ class _DashboardPageState extends State<DashboardPage>
   final Map<String, bool> _pressedServicios = {};
 
   // 2. FUNCIÓN PARA NAVEGAR SIN CAMBIAR LA URL
-  void _nourl(BuildContext context, Widget paginaDestino) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        settings: const RouteSettings(name: null), 
-        pageBuilder: (context, animation, secondaryAnimation) => paginaDestino,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
-  }
 
   @override
   void initState() {
@@ -116,7 +105,7 @@ onTapCancel: () => setState(() {
 
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (_, animation, __) => pagina,
+        pageBuilder: (_, animation, _) => pagina,
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);
         },
