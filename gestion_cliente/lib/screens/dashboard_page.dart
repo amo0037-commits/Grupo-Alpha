@@ -39,7 +39,7 @@ class _DashboardPageState extends State<DashboardPage>
   final Map<String, bool> _hoveringServicios = {};
 
   // 2. FUNCIÓN PARA NAVEGAR SIN CAMBIAR LA URL
-  void _NoUrl(BuildContext context, Widget paginaDestino) {
+  void _nourl(BuildContext context, Widget paginaDestino) {
     Navigator.of(context).push(
       PageRouteBuilder(
         settings: const RouteSettings(name: null), 
@@ -87,78 +87,40 @@ class _DashboardPageState extends State<DashboardPage>
   final isHovering = _hoveringServicios[negocio] ?? false;
   bool isPressed = false;
 
-  return StatefulBuilder(
-    builder: (context, setLocalState) {
-      return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hoveringServicios[negocio] = true),
-        onExit: (_) => setState(() => _hoveringServicios[negocio] = false),
-        child: GestureDetector(
-          onTapDown: (_) => setLocalState(() => isPressed = true),
-          onTapUp: (_) => setLocalState(() => isPressed = false),
-          onTapCancel: () => setLocalState(() => isPressed = false),
-          onTap: () {
-            final data = rutasServicios[negocio];
-            if (data != null) {
-              Navigator.pushNamed(
-                context,
-                data['ruta']!,
-                arguments: {
-                  'userId': FirebaseAuth.instance.currentUser!.uid,
-                  'negocio': data['servicio']!,
-                },
-              );
-            }
-          },
-          child: AnimatedScale(
-            scale: isPressed ? 0.95 : 1,
-            duration: const Duration(milliseconds: 120),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              transform: Matrix4.translationValues(
-                0,
-                isHovering ? -6 : 0,
-                0,
-              ),
-              width: width,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isHovering
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: const Color(0xFF64B5F6)
-                            .withValues(alpha: 0.15),
-                        child: Icon(
-                          getIcono(negocio),
-                          color: const Color(0xFF64B5F6),
-                        ),
-                      ),
-                      title: Text(
-                        negocio,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white70,
-                        size: 16,
-                      ),
-                    ),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hoveringServicios[negocio] = true),
+      onExit: (_) => setState(() => _hoveringServicios[negocio] = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        transform: Matrix4.translationValues(0, isHovering ? -6 : 0, 0),
+        width: width,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: InkWell(
+              onTap: () {
+                final constructor = paginasServicios[negocio];
+                if (constructor != null) {
+                  final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                  _nourl(context, constructor(uid, negocio));
+                } else {
+                  debugPrint("No se encontró página para: $negocio");
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                ),
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFF64B5F6).withValues(alpha: 0.15),
+                    child: Icon(getIcono(negocio), color: const Color(0xFF64B5F6)),
                   ),
                 ),
               ),
@@ -211,7 +173,7 @@ class _DashboardPageState extends State<DashboardPage>
           controller: _tabController,
           indicator: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha:0.15),
           ),
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
@@ -256,9 +218,9 @@ class _DashboardPageState extends State<DashboardPage>
                 padding: const EdgeInsets.all(20),
                 margin: const EdgeInsets.only(bottom: 30),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
                 child: const Column(
                   children: [
