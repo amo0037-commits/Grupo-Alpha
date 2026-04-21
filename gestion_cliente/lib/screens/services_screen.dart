@@ -17,6 +17,9 @@ class ServicePage extends StatefulWidget {
 class _ServicePageState extends State<ServicePage> {
   final PageController _controller = PageController(viewportFraction: 0.65);
 
+
+  int? _pressedIndex;
+
   final services = const [
     {"image": "assets/images/peluqueriainfo2.png", "title": "Peluquería"},
     {"image": "assets/images/clinicafisioinfo.png", "title": "Clínica de fisioterapia"},
@@ -126,27 +129,48 @@ class _ServicePageState extends State<ServicePage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
 
-                    child: GestureDetector(
-                      onTap: () => _open(item["title"]!),
+                    child: Listener(
+  onPointerDown: (_) {
+    setState(() {
+      _pressedIndex = index;
+    });
+  },
+  onPointerUp: (_) {
+    setState(() {
+      _pressedIndex = null;
+    });
+  },
+  onPointerCancel: (_) {
+    setState(() {
+      _pressedIndex = null;
+    });
+  },
+
+  child: GestureDetector(
+    onTap: () => _open(item["title"]!),
+
+    child: AnimatedScale(
+      duration: const Duration(milliseconds: 150),
+      scale: _pressedIndex == index ? 0.94 : 1.0,
 
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(28),
 
                           // 🔥 GLOW AZUL MÁS POTENTE
-                          boxShadow: [
-                            BoxShadow(
-                              color: neonBlue.withOpacity(0.45),
-                              blurRadius: 28,
-                              spreadRadius: 2.5,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.25),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
+                         boxShadow: [
+                              BoxShadow(
+                         color: neonBlue.withOpacity(_pressedIndex == index ? 0.25 : 0.45),
+                         blurRadius: _pressedIndex == index ? 12 : 28,
+                         spreadRadius: _pressedIndex == index ? 1 : 2.5,
+                         offset: Offset(0, _pressedIndex == index ? 3 : 8),
+                      ),
+                              BoxShadow(
+                         color: Colors.black.withOpacity(0.25),
+                         blurRadius: _pressedIndex == index ? 6 : 12,
+                         offset: Offset(0, _pressedIndex == index ? 2 : 6),
+                      ),
+                    ],
                         ),
 
                         child: ClipRRect(
@@ -202,6 +226,8 @@ class _ServicePageState extends State<ServicePage> {
                         ),
                       ),
                     ),
+                  ),
+                  ),
                   );
                 },
               ),
