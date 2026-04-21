@@ -301,8 +301,15 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
   }
 
   @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextField(
+      style: const TextStyle(color: Colors.white),
       controller: widget.controller,
       focusNode: _focusNode,
       obscureText: widget.obscureText,
@@ -315,10 +322,10 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
         }
       },
 
-      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: TextStyle(color: _hasFocus ? Colors.white : Colors.white70),
+        hintStyle: TextStyle(color: _hasFocus ? Colors.white : Colors.white70),
+        hintText: widget.label,
+
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
