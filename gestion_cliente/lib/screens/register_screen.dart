@@ -15,7 +15,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController apellidoController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final TextEditingController telefonoController = TextEditingController();
   final TextEditingController direccionController = TextEditingController();
   final TextEditingController edadController = TextEditingController();
@@ -45,9 +46,9 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
 
       final user = userCredential.user;
 
@@ -69,6 +70,8 @@ class _RegisterPageState extends State<RegisterPage> {
         "fecha_registro": Timestamp.now(),
       });
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Usuario creado correctamente')),
       );
@@ -83,9 +86,11 @@ class _RegisterPageState extends State<RegisterPage> {
         mensaje = 'La contraseña es muy débil';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensaje)),
-      );
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mensaje)));
     }
 
     if (!mounted) return;
@@ -99,11 +104,7 @@ class _RegisterPageState extends State<RegisterPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E293B),
-            Color(0xFF334155),
-            Color(0xFF64B5F6), 
-          ],
+          colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
         ),
       ),
       child: Scaffold(
@@ -125,19 +126,31 @@ class _RegisterPageState extends State<RegisterPage> {
                   _glassField(_input(nombreController, "Nombre", Icons.person)),
                   const SizedBox(height: 12),
 
-                  _glassField(_input(apellidoController, "Apellidos", Icons.person_outline)),
+                  _glassField(
+                    _input(
+                      apellidoController,
+                      "Apellidos",
+                      Icons.person_outline,
+                    ),
+                  ),
                   const SizedBox(height: 12),
 
                   _glassField(_input(emailController, "Email", Icons.email)),
                   const SizedBox(height: 12),
 
-                  _glassField(_input(telefonoController, "Teléfono", Icons.phone)),
+                  _glassField(
+                    _input(telefonoController, "Teléfono", Icons.phone),
+                  ),
                   const SizedBox(height: 12),
 
-                  _glassField(_input(direccionController, "Dirección", Icons.location_on)),
+                  _glassField(
+                    _input(direccionController, "Dirección", Icons.location_on),
+                  ),
                   const SizedBox(height: 12),
 
-                  _glassField(_input(edadController, "Edad", Icons.cake, number: true)),
+                  _glassField(
+                    _input(edadController, "Edad", Icons.cake, number: true),
+                  ),
                   const SizedBox(height: 12),
 
                   _glassField(_passwordField()),
@@ -162,7 +175,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   ...negocios.keys.map((key) {
                     return CheckboxListTile(
                       activeColor: Colors.blueAccent,
-                      title: Text(key, style: const TextStyle(color: Colors.white)),
+                      title: Text(
+                        key,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                       value: negocios[key],
                       onChanged: (value) {
                         setState(() => negocios[key] = value!);
@@ -181,17 +197,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF3B82F6),
-                            Color(0xFF60A5FA),
-                          ],
+                          colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blueAccent.withOpacity(0.4),
+                            color: Colors.blueAccent.withValues(alpha: 0.4),
                             blurRadius: 15,
                             offset: const Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       child: Center(
@@ -234,9 +247,9 @@ class _RegisterPageState extends State<RegisterPage> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
           ),
           child: child,
         ),
@@ -245,8 +258,12 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // INPUT SIMPLE
-  Widget _input(TextEditingController c, String label, IconData icon,
-      {bool number = false}) {
+  Widget _input(
+    TextEditingController c,
+    String label,
+    IconData icon, {
+    bool number = false,
+  }) {
     return TextField(
       controller: c,
       keyboardType: number ? TextInputType.number : TextInputType.text,
@@ -303,8 +320,9 @@ class _RegisterPageState extends State<RegisterPage> {
             isConfirmPasswordHidden ? Icons.visibility : Icons.visibility_off,
             color: Colors.white70,
           ),
-          onPressed: () =>
-              setState(() => isConfirmPasswordHidden = !isConfirmPasswordHidden),
+          onPressed: () => setState(
+            () => isConfirmPasswordHidden = !isConfirmPasswordHidden,
+          ),
         ),
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(
