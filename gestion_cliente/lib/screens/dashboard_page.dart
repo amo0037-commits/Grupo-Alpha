@@ -98,18 +98,23 @@ class _DashboardPageState extends State<DashboardPage>
           onTapUp: (_) => setLocalState(() => isPressed = false),
           onTapCancel: () => setLocalState(() => isPressed = false),
           onTap: () {
-            final data = rutasServicios[negocio];
-            if (data != null) {
-              Navigator.pushNamed(
-                context,
-                data['ruta']!,
-                arguments: {
-                  'userId': FirebaseAuth.instance.currentUser!.uid,
-                  'negocio': data['servicio']!,
-                },
-              );
-            }
-          },
+  final builder = paginasServicios[negocio];
+
+  if (builder != null) {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final pagina = builder(uid, negocio);
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => pagina,
+        transitionsBuilder: (_, animation, __, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+},
           child: AnimatedScale(
             scale: isPressed ? 0.95 : 1,
             duration: const Duration(milliseconds: 120),
