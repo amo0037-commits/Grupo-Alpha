@@ -84,8 +84,7 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget buildAnimatedServiceCard(String negocio, double width) {
-  final isHovering = _hoveringServicios[negocio] ?? false;
-  bool isPressed = false;
+    final isHovering = _hoveringServicios[negocio] ?? false;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -122,15 +121,19 @@ class _DashboardPageState extends State<DashboardPage>
                     backgroundColor: const Color(0xFF64B5F6).withValues(alpha: 0.15),
                     child: Icon(getIcono(negocio), color: const Color(0xFF64B5F6)),
                   ),
+                  title: Text(
+                    negocio,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
                 ),
               ),
             ),
           ),
         ),
-      );
-    },
-  );
-}
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
