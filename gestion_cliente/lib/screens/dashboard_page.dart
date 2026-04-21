@@ -37,6 +37,7 @@ class _DashboardPageState extends State<DashboardPage>
   };
 
   final Map<String, bool> _hoveringServicios = {};
+  final Map<String, bool> _pressedServicios = {};
 
   // 2. FUNCIÓN PARA NAVEGAR SIN CAMBIAR LA URL
   void _nourl(BuildContext context, Widget paginaDestino) {
@@ -85,6 +86,7 @@ class _DashboardPageState extends State<DashboardPage>
 
   Widget buildAnimatedServiceCard(String negocio, double width) {
     final isHovering = _hoveringServicios[negocio] ?? false;
+    final isPressed = _pressedServicios[negocio] ?? false;
 
   return StatefulBuilder(
     builder: (context, setLocalState) {
@@ -93,9 +95,17 @@ class _DashboardPageState extends State<DashboardPage>
         onEnter: (_) => setState(() => _hoveringServicios[negocio] = true),
         onExit: (_) => setState(() => _hoveringServicios[negocio] = false),
         child: GestureDetector(
-          onTapDown: (_) => setLocalState(() => isPressed = true),
-          onTapUp: (_) => setLocalState(() => isPressed = false),
-          onTapCancel: () => setLocalState(() => isPressed = false),
+         onTapDown: (_) => setState(() {
+  _pressedServicios[negocio] = true;
+}),
+
+onTapUp: (_) => setState(() {
+  _pressedServicios[negocio] = false;
+}),
+
+onTapCancel: () => setState(() {
+  _pressedServicios[negocio] = false;
+}),
           onTap: () {
   final builder = paginasServicios[negocio];
 
@@ -169,7 +179,8 @@ class _DashboardPageState extends State<DashboardPage>
             ),
           ),
         ),
-      ),
+      );
+    }
     );
   }
 
