@@ -106,7 +106,7 @@ onTapCancel: () => setState(() {
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (_, animation, _) => pagina,
-        transitionsBuilder: (_, animation, __, child) {
+        transitionsBuilder: (_, animation, _, child) {
           return FadeTransition(opacity: animation, child: child);
         },
       ),
