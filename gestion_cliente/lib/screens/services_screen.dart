@@ -102,7 +102,7 @@ class _ServicePageState extends State<ServicePage> {
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
                   shadows: [
-                    Shadow(color: neonBlue.withOpacity(0.9), blurRadius: 18),
+                    Shadow(color: neonBlue.withValues(alpha: 0.9), blurRadius: 18),
                     const Shadow(
                       color: Colors.black,
                       blurRadius: 10,
@@ -136,13 +136,13 @@ class _ServicePageState extends State<ServicePage> {
                           // 🔥 GLOW AZUL MÁS POTENTE
                           boxShadow: [
                             BoxShadow(
-                              color: neonBlue.withOpacity(0.45),
+                             color: neonBlue.withValues(alpha: 0.45),
                               blurRadius: 28,
                               spreadRadius: 2.5,
                               offset: const Offset(0, 8),
                             ),
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.25),
+                              color: Colors.black.withValues(alpha: 0.25),
                               blurRadius: 12,
                               offset: const Offset(0, 6),
                             ),
