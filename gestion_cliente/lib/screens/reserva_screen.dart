@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
@@ -102,17 +101,17 @@ class _ReservaPageState extends State<ReservaPage> {
                   ),
                   child: DropdownButtonFormField<String>(
                     dropdownColor: const Color(0xFF1E293B),
-                    value: servicioSeleccionado,
+                    initialValue: servicioSeleccionado,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Selecciona un servicio',
                       labelStyle: const TextStyle(color: Colors.white70),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.08),
+                      fillColor:Colors.white.withValues(alpha: 0.08),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -197,7 +196,7 @@ class _ReservaPageState extends State<ReservaPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blueAccent.withOpacity(0.35),
+                            color: Colors.blueAccent.withValues(alpha: 0.35),
                             blurRadius: 15,
                             offset: const Offset(0, 6),
                           ),
@@ -262,11 +261,11 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
           duration: const Duration(milliseconds: 250),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             border: Border.all(
               color: _hasFocus
                   ? const Color(0xFF64B5F6)
-                  : Colors.white.withOpacity(0.15),
+                  : Colors.white.withValues(alpha: 0.15),
             ),
           ),
           child: TextField(
