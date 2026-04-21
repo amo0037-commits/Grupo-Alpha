@@ -39,7 +39,7 @@ class _DashboardPageState extends State<DashboardPage>
   final Map<String, bool> _hoveringServicios = {};
 
   // 2. FUNCIÓN PARA NAVEGAR SIN CAMBIAR LA URL
-  void _NoUrl(BuildContext context, Widget paginaDestino) {
+  void _nourl(BuildContext context, Widget paginaDestino) {
     Navigator.of(context).push(
       PageRouteBuilder(
         settings: const RouteSettings(name: null), 
@@ -103,7 +103,7 @@ class _DashboardPageState extends State<DashboardPage>
                 final constructor = paginasServicios[negocio];
                 if (constructor != null) {
                   final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-                  _NoUrl(context, constructor(uid, negocio));
+                  _nourl(context, constructor(uid, negocio));
                 } else {
                   debugPrint("No se encontró página para: $negocio");
                 }
@@ -111,14 +111,14 @@ class _DashboardPageState extends State<DashboardPage>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: .08),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF64B5F6).withOpacity(0.15),
+                    backgroundColor: const Color(0xFF64B5F6).withValues(alpha: 0.15),
                     child: Icon(getIcono(negocio), color: const Color(0xFF64B5F6)),
                   ),
                   title: Text(
@@ -176,7 +176,7 @@ class _DashboardPageState extends State<DashboardPage>
           controller: _tabController,
           indicator: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha:0.15),
           ),
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
@@ -221,9 +221,9 @@ class _DashboardPageState extends State<DashboardPage>
                 padding: const EdgeInsets.all(20),
                 margin: const EdgeInsets.only(bottom: 30),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
                 child: const Column(
                   children: [
