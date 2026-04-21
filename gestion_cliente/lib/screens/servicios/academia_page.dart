@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:gestion_cliente/notifications_service.dart';
 
 class AcademiaPage extends StatefulWidget {
   final String userId;
@@ -34,7 +35,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
     _horasDisponibles = List.from(horariosTotales);
   }
 
-  // Obtiene días que tienen alguna reserva para marcarlos en el calendario
   Future<void> _fetchBlockedDays() async {
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -48,16 +48,16 @@ class _AcademiaPageState extends State<AcademiaPage> {
         DateTime fecha = (doc['fecha'] as Timestamp).toDate();
         blocked.add(DateTime(fecha.year, fecha.month, fecha.day));
       }
-      if (mounted)
+      if (mounted) {
         setState(() {
           _blockedDays = blocked;
         });
+      }
     } catch (e) {
       debugPrint("Error obteniendo días: $e");
     }
   }
 
-  // Lógica principal: Filtra por aforo (10) y por reserva previa del usuario
   Future<void> _actualizarHorasDisponibles() async {
     if (_selectedDay == null || _claseSeleccionada.isEmpty) return;
     setState(() {
@@ -79,15 +79,12 @@ class _AcademiaPageState extends State<AcademiaPage> {
           .where('estado', isEqualTo: 'activa')
           .get();
 
-      // 1. Mapa para contar aforo global
       Map<String, int> conteoGlobal = {};
-      // 2. Lista para saber dónde ya reservó este usuario
       List<String> misHoras = [];
 
       for (var doc in snapshot.docs) {
         String hora = doc['hora'] as String;
         String uid = doc['userId'] as String;
-
         conteoGlobal[hora] = (conteoGlobal[hora] ?? 0) + 1;
         if (uid == widget.userId) {
           misHoras.add(hora);
@@ -98,13 +95,12 @@ class _AcademiaPageState extends State<AcademiaPage> {
         _horasDisponibles = horariosTotales.where((h) {
           int total = conteoGlobal[h] ?? 0;
           bool yoYaReserve = misHoras.contains(h);
-
-          // Disponible si: hay menos de 10 personas Y yo no estoy en esa lista
           return total < 10 && !yoYaReserve;
         }).toList();
 
-        if (!_horasDisponibles.contains(_horaSeleccionada))
+        if (!_horasDisponibles.contains(_horaSeleccionada)) {
           _horaSeleccionada = '';
+        }
         _loading = false;
       });
     } catch (e) {
@@ -134,7 +130,17 @@ class _AcademiaPageState extends State<AcademiaPage> {
         _selectedDay!.day,
       );
 
-      // Verificación de seguridad de último segundo (Cupo y duplicado)
+      // ── fechaCompleta para notificación ────────────────────
+      final partesHora = _horaSeleccionada.split(':');
+      final fechaCompleta = DateTime(
+        fechaBusqueda.year,
+        fechaBusqueda.month,
+        fechaBusqueda.day,
+        int.parse(partesHora[0]),
+        int.parse(partesHora[1]),
+      );
+      // ───────────────────────────────────────────────────────
+
       final snapshotCheck = await FirebaseFirestore.instance
           .collection('reservas')
           .where('servicio', isEqualTo: widget.negocio)
@@ -144,26 +150,22 @@ class _AcademiaPageState extends State<AcademiaPage> {
           .where('estado', isEqualTo: 'activa')
           .get();
 
-      // Chequear si el usuario ya está ahí (por si acaso)
       bool yaEstoyInscrito = snapshotCheck.docs.any(
         (doc) => doc['userId'] == widget.userId,
       );
 
       if (yaEstoyInscrito) {
-        // Esto no debería pasar porque ya filtramos, pero por seguridad lo volvemos a revisar antes de reservar
         _mostrarMensaje('Ya tienes una reserva para esta clase y hora.');
         _actualizarHorasDisponibles();
         return;
       }
 
       if (snapshotCheck.docs.length >= 10) {
-        // Aforo máximo
         _mostrarMensaje('¡Lo sentimos! El cupo se acaba de llenar.');
         _actualizarHorasDisponibles();
         return;
       }
 
-      // Si todo OK, guardamos
       await FirebaseFirestore.instance.collection('reservas').add({
         'userId': widget.userId,
         'servicio': widget.negocio,
@@ -171,6 +173,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
         'hora': _horaSeleccionada,
         'clase': _claseSeleccionada,
         'estado': 'activa',
+        'fechaHora': Timestamp.fromDate(fechaCompleta), // ← añadido
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -182,13 +185,28 @@ class _AcademiaPageState extends State<AcademiaPage> {
         _claseSeleccionada = '';
         _horasDisponibles = List.from(horariosTotales);
       });
+
+      // ── Programar notificación ──────────────────────────────
+      try {
+        await NotificationsService.scheduleNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          servicio: widget.negocio,
+          especialista: _claseSeleccionada,
+          scheduledDate: fechaCompleta,
+        );
+      } catch (e) {
+        debugPrint('Error al programar notificación: $e');
+      }
+      // ────────────────────────────────────────────────────────
+
     } catch (e) {
       _mostrarMensaje('Error al reservar: $e');
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
         });
+      }
     }
   }
 
@@ -217,8 +235,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-
-        // opcional pero recomendado para que el gradiente del fondo no “choque”
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -235,9 +251,11 @@ class _AcademiaPageState extends State<AcademiaPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [  Color(0xFFF5F5F5),
-  Color(0xFFFFB74D), 
-  Color(0xFFF57C00), ],
+            colors: [
+              Color(0xFFF5F5F5),
+              Color(0xFFFFB74D),
+              Color(0xFFF57C00),
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -259,17 +277,17 @@ class _AcademiaPageState extends State<AcademiaPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // CALENDARIO
+                    // ── Calendario ──────────────────────────────────────────
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -290,7 +308,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
                           });
                           _actualizarHorasDisponibles();
                         },
-
                         headerStyle: const HeaderStyle(
                           formatButtonVisible: false,
                           titleCentered: true,
@@ -309,12 +326,10 @@ class _AcademiaPageState extends State<AcademiaPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         calendarStyle: const CalendarStyle(
                           defaultTextStyle: TextStyle(
                             color: Color.fromARGB(255, 0, 0, 0),
                           ),
-
                           selectedDecoration: BoxDecoration(
                             color: Colors.blueAccent,
                             shape: BoxShape.circle,
@@ -347,17 +362,17 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 30),
 
-                    
+                    // ── Dropdown clase ──────────────────────────────────────
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -367,23 +382,19 @@ class _AcademiaPageState extends State<AcademiaPage> {
                         horizontal: 16,
                         vertical: 14,
                       ),
-
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
                         alignment: AlignmentDirectional.center,
-
-                        value: _claseSeleccionada.isEmpty
+                        initialValue: _claseSeleccionada.isEmpty // ← fix
                             ? null
                             : _claseSeleccionada,
                         decoration: const InputDecoration(
                           labelText: 'Selecciona Materia',
                           labelStyle: TextStyle(color: Colors.black87),
                           floatingLabelStyle: TextStyle(color: Colors.black),
-
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -402,16 +413,13 @@ class _AcademiaPageState extends State<AcademiaPage> {
                           Icons.arrow_drop_down,
                           color: Colors.black,
                         ),
-
-                        dropdownColor: Colors.white.withOpacity(0.95),
-
+                        dropdownColor: Colors.white.withValues(alpha: 0.95),
                         items: clases.map((c) {
                           return DropdownMenuItem(
                             value: c,
                             child: Center(child: Text(c)),
                           );
                         }).toList(),
-
                         onChanged: (val) {
                           setState(() => _claseSeleccionada = val!);
                           _actualizarHorasDisponibles();
@@ -421,52 +429,43 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 15),
 
-                    
+                    // ── Dropdown hora ───────────────────────────────────────
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
                         alignment: AlignmentDirectional.center,
-
-                        value: _horaSeleccionada.isEmpty
+                        initialValue: _horaSeleccionada.isEmpty // ← fix
                             ? null
                             : _horaSeleccionada,
-
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Hora disponible',
-                          labelStyle: const TextStyle(color: Colors.black87),
-                          floatingLabelStyle: const TextStyle(
-                            color: Colors.black,
-                          ),
-
+                          labelStyle: TextStyle(color: Colors.black87),
+                          floatingLabelStyle: TextStyle(color: Colors.black),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-
-                          
                           isCollapsed: true,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
-
                         icon: const Icon(
                           Icons.arrow_drop_down,
                           color: Colors.black,
@@ -482,25 +481,23 @@ class _AcademiaPageState extends State<AcademiaPage> {
                             );
                           }).toList();
                         },
-
-                        dropdownColor: Colors.white.withOpacity(0.95),
-
+                        dropdownColor: Colors.white.withValues(alpha: 0.95),
                         items: _horasDisponibles.map((h) {
                           return DropdownMenuItem(
                             value: h,
                             child: Center(child: Text(h)),
                           );
                         }).toList(),
-
                         onChanged: _selectedDay == null
                             ? null
-                            : (val) => setState(() => _horaSeleccionada = val!),
+                            : (val) =>
+                                setState(() => _horaSeleccionada = val!),
                       ),
                     ),
 
                     const SizedBox(height: 35),
 
-                    
+                    // ── Botón reservar ──────────────────────────────────────
                     SizedBox(
                       width: screenWidth * 0.7,
                       height: 55,
@@ -518,7 +515,11 @@ class _AcademiaPageState extends State<AcademiaPage> {
                         child: Ink(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
+                              colors: [
+                                Color(0xFF1E293B),
+                                Color(0xFF334155),
+                                Color(0xFF64B5F6),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -551,20 +552,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
           ),
         ),
       ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      floatingLabelAlignment: FloatingLabelAlignment.center,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
     );
   }
 }

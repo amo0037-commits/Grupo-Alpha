@@ -14,11 +14,14 @@ import 'package:gestion_cliente/screens/servicios/yoga_page.dart';
 import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
 import 'package:gestion_cliente/screens/servicios/fisioterapia_page.dart';
 import 'package:gestion_cliente/screens/servicios/academia_page.dart';
+import 'package:gestion_cliente/notifications_service.dart';
 
 
 void main() async {
   // Firebase
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize notifications
+  await NotificationsService.init();
   //  Inicializa firebase con las opciones específicas para cada plataforma
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
@@ -29,6 +32,7 @@ void main() async {
 
 
 class AuthWrapper extends StatelessWidget {
+    const AuthWrapper({super.key});
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -51,6 +55,7 @@ class AlphaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'AlphaApp',
       debugShowCheckedModeBanner: false,
       theme: AppThemes.inicioTheme,
@@ -83,14 +88,14 @@ class AlphaApp extends StatelessWidget {
           );  
         },
         '/peluqueria': (context) {
-            final args = 
-               ModalRoute.of(context)!.settings.arguments
-                   as Map<String, dynamic>?;
-                   return PeluqueriaPage(
-                    userId: args?['userId'] ?? '',
-                    negocio: args?['negocio'] ?? 'Peluqueria',
-                    );
-            },
+          final args =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>?;
+          return PeluqueriaPage(
+            userId: args?['userId'] ?? '',
+            negocio: args?['negocio'] ?? 'Peluqueria',
+          );
+        },
         '/fisioterapia': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return FisioterapiaPage(
