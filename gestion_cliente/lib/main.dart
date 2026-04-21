@@ -24,6 +24,8 @@ void main() async {
   await NotificationsService.init();
   //  Inicializa firebase con las opciones específicas para cada plataforma
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+
   runApp(const AlphaApp());
 }
 
@@ -70,9 +72,7 @@ class AlphaApp extends StatelessWidget {
 
         // Servicios
         '/gimnasio': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
           return GimnasioPage(
             userId: args?['userId'] ?? '',
@@ -80,9 +80,7 @@ class AlphaApp extends StatelessWidget {
           );
         },
         '/yoga': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
           return YogaPage(
             userId: args?['userId'] ?? '',
@@ -99,18 +97,14 @@ class AlphaApp extends StatelessWidget {
           );
         },
         '/fisioterapia': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return FisioterapiaPage(
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Fisioterapia',
           );
         },
         '/academia': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return AcademiaPage(
             userId: args?['userId'] ?? '',
             negocio: args?['negocio'] ?? 'Academia',
