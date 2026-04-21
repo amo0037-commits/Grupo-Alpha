@@ -13,8 +13,6 @@ class _GimnasioInfoState extends State<GimnasioInfo>
   final Color amarillo = Color(0xFFFFF176);
 
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   final List<Map<String, String>> clases = [
     {"title": "Sala fitness", "image": "assets/images/fitness.jpg"},
@@ -40,15 +38,7 @@ class _GimnasioInfoState extends State<GimnasioInfo>
       duration: const Duration(milliseconds: 900),
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.92,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+   
 
     _controller.forward();
   }
@@ -121,7 +111,7 @@ class _GimnasioInfoState extends State<GimnasioInfo>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     blurRadius: 25,
                   ),
                 ],
@@ -221,7 +211,7 @@ class _GimnasioInfoState extends State<GimnasioInfo>
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.75),
+                                  Colors.black.withValues(alpha: 0.75),
                                   Colors.transparent,
                                 ],
                               ),
@@ -273,7 +263,7 @@ class _GimnasioInfoState extends State<GimnasioInfo>
                                       decoration: BoxDecoration(
                                         boxShadow: [
                                           BoxShadow(
-                                            color: amarillo.withOpacity(0.25),
+                                            color: amarillo.withValues(alpha: 0.25),
                                             blurRadius: 18,
                                             spreadRadius: 1,
                                           ),
@@ -307,7 +297,7 @@ class _GimnasioInfoState extends State<GimnasioInfo>
                       "Además, ofrecemos seguimiento personalizado donde cada usuario recibe orientación, planificación y ajustes en su rutina para maximizar resultados y mantener la motivación.\n\n"
                       "Nuestro objetivo no es solo mejorar la apariencia física, sino también fomentar hábitos saludables, constancia y un estilo de vida activo y equilibrado.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 15,
                         height: 1.5,
                       ),

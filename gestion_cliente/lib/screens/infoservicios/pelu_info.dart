@@ -13,8 +13,7 @@ class _PeluInfoState extends State<PeluInfo>
   final Color aguamarron = const Color(0xFFFF80AB);
 
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+ 
 
   final List<Map<String, String>> clases = [
     {"title": "Corte caballero", "image": "assets/images/cortecaballero.jpg"},
@@ -35,27 +34,7 @@ class _PeluInfoState extends State<PeluInfo>
     },
   ];
 
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.92,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    _controller.forward();
-  }
+  
 
   @override
   void dispose() {
@@ -134,7 +113,7 @@ class _PeluInfoState extends State<PeluInfo>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     blurRadius: 25,
                   ),
                 ],
@@ -234,7 +213,7 @@ class _PeluInfoState extends State<PeluInfo>
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.75),
+                                  Colors.black.withValues(alpha: 0.75),
                                   Colors.transparent,
                                 ],
                               ),
@@ -259,7 +238,7 @@ class _PeluInfoState extends State<PeluInfo>
                                         begin: Alignment.bottomCenter,
                                         end: Alignment.topCenter,
                                         colors: [
-                                          Colors.black.withOpacity(0.75),
+                                          Colors.black.withValues(alpha: 0.75),
                                           Colors.transparent,
                                         ],
                                       ),
@@ -319,7 +298,7 @@ class _PeluInfoState extends State<PeluInfo>
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: aguamarron
-                                                        .withOpacity(0.25),
+                                                        .withValues(alpha: 0.25),
                                                     blurRadius: 18,
                                                     spreadRadius: 1,
                                                   ),
@@ -357,7 +336,7 @@ class _PeluInfoState extends State<PeluInfo>
                       "Además, ofrecemos servicios de barbería y estilismo masculino, cuidando cada detalle para conseguir un acabado limpio, moderno y personalizado.\n\n"
                       "Nuestro objetivo no es solo mejorar la apariencia, sino también cuidar la salud del cabello y ofrecer una experiencia de belleza cómoda, profesional y de confianza.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 15,
                         height: 1.5,
                       ),
