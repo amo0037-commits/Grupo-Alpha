@@ -60,34 +60,6 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      await saveFcmToken();
-
-    } on FirebaseAuthException catch (e) {
-      String mensaje = 'Error al iniciar sesión';
-
-      if (e.code == 'user-not-found') mensaje = 'Usuario no encontrado';
-      if (e.code == 'wrong-password') mensaje = 'Contraseña incorrecta';
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(mensaje)));
-    }
-
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-  // 1. Validación básica antes de disparar Firebase
-  if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-    _mostrarMensaje("Por favor, rellena todos los campos");
-    return;
-  }
-
-    setState(() => _isLoading = true);
-
-    try {
       // 2. Intento de inicio de sesión
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
