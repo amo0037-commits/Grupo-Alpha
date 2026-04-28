@@ -37,19 +37,9 @@ class _DashboardPageState extends State<DashboardPage>
   };
 
   final Map<String, bool> _hoveringServicios = {};
+  final Map<String, bool> _pressedServicios = {};
 
   // 2. FUNCIÓN PARA NAVEGAR SIN CAMBIAR LA URL
-  void _nourl(BuildContext context, Widget paginaDestino) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        settings: const RouteSettings(name: null), 
-        pageBuilder: (context, animation, secondaryAnimation) => paginaDestino,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
-  }
 
   @override
   void initState() {
@@ -85,53 +75,101 @@ class _DashboardPageState extends State<DashboardPage>
 
   Widget buildAnimatedServiceCard(String negocio, double width) {
     final isHovering = _hoveringServicios[negocio] ?? false;
+    final isPressed = _pressedServicios[negocio] ?? false;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hoveringServicios[negocio] = true),
-      onExit: (_) => setState(() => _hoveringServicios[negocio] = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        transform: Matrix4.translationValues(0, isHovering ? -6 : 0, 0),
-        width: width,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: InkWell(
-              onTap: () {
-                final constructor = paginasServicios[negocio];
-                if (constructor != null) {
-                  final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-                  _nourl(context, constructor(uid, negocio));
-                } else {
-                  debugPrint("No se encontró página para: $negocio");
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .08),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF64B5F6).withValues(alpha: 0.15),
-                    child: Icon(getIcono(negocio), color: const Color(0xFF64B5F6)),
+  return StatefulBuilder(
+    builder: (context, setLocalState) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hoveringServicios[negocio] = true),
+        onExit: (_) => setState(() => _hoveringServicios[negocio] = false),
+        child: GestureDetector(
+         onTapDown: (_) => setState(() {
+  _pressedServicios[negocio] = true;
+}),
+
+onTapUp: (_) => setState(() {
+  _pressedServicios[negocio] = false;
+}),
+
+onTapCancel: () => setState(() {
+  _pressedServicios[negocio] = false;
+}),
+          onTap: () {
+  final builder = paginasServicios[negocio];
+
+  if (builder != null) {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final pagina = builder(uid, negocio);
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (_, animation, _) => pagina,
+        transitionsBuilder: (_, animation, _, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+},
+          child: AnimatedScale(
+            scale: isPressed ? 0.95 : 1,
+            duration: const Duration(milliseconds: 120),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              transform: Matrix4.translationValues(
+                0,
+                isHovering ? -6 : 0,
+                0,
+              ),
+              width: width,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isHovering
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: const Color(0xFF64B5F6)
+                            .withValues(alpha: 0.15),
+                        child: Icon(
+                          getIcono(negocio),
+                          color: const Color(0xFF64B5F6),
+                        ),
+                      ),
+                      title: Text(
+                        negocio,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      trailing: const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
+                    ),
                   ),
-                  title: Text(
-                    negocio,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
                 ),
               ),
             ),
           ),
         ),
-      ),
+      );
+    }
     );
   }
 
@@ -346,4 +384,4 @@ class _FloatingHandState extends State<FloatingHand> with SingleTickerProviderSt
       child: const Icon(Icons.waving_hand, size: 40, color: Color(0xFF64B5F6)),
     );
   }
-}
+} 
