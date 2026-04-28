@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_cliente/screens/inicio_screen.dart';
 
 import 'register_screen.dart';
@@ -19,13 +21,42 @@ class _LoginPageState extends State<LoginPage> {
   bool _buttonPressed = false;
   bool _isLoading = false;
 
-  Future<void> login() async {
-    // 1. Validación básica antes de disparar Firebase
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      _mostrarMensaje("Por favor, rellena todos los campos");
-      return;
-    }
+  Future<void> saveFcmToken() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
 
+  final messaging = FirebaseMessaging.instance;
+
+  // pedir permisos (solo la primera vez)
+  await messaging.requestPermission();
+
+  // obtener token del dispositivo
+  String? token = await messaging.getToken();
+
+  debugPrint("FCM TOKEN: $token");
+
+  if (token != null) {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          'fcmToken': token,
+        });
+  }
+
+  // si el token cambia en el futuro
+  messaging.onTokenRefresh.listen((newToken) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          'fcmToken': newToken,
+        });
+  });
+}
+
+
+  Future<void> login() async {
     setState(() => _isLoading = true);
 
     try {
@@ -84,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
           colors: [
             Color(0xFF1E293B),
             Color(0xFF334155),
-            Color(0xFF64B5F6), // 🔥 MISMO AZUL DEL HOME
+            Color(0xFF64B5F6), 
           ],
         ),
       ),
@@ -301,8 +332,15 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
   }
 
   @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextField(
+      style: const TextStyle(color: Colors.white),
       controller: widget.controller,
       focusNode: _focusNode,
       obscureText: widget.obscureText,
@@ -315,10 +353,10 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
         }
       },
 
-      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: TextStyle(color: _hasFocus ? Colors.white : Colors.white70),
+        hintStyle: TextStyle(color: _hasFocus ? Colors.white : Colors.white70),
+        hintText: widget.label,
+
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,

@@ -37,19 +37,9 @@ class _DashboardPageState extends State<DashboardPage>
   };
 
   final Map<String, bool> _hoveringServicios = {};
+  final Map<String, bool> _pressedServicios = {};
 
   // 2. FUNCIÓN PARA NAVEGAR SIN CAMBIAR LA URL
-  void _NoUrl(BuildContext context, Widget paginaDestino) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        settings: const RouteSettings(name: null), 
-        pageBuilder: (context, animation, secondaryAnimation) => paginaDestino,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
-  }
 
   @override
   void initState() {
@@ -84,8 +74,8 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget buildAnimatedServiceCard(String negocio, double width) {
-  final isHovering = _hoveringServicios[negocio] ?? false;
-  bool isPressed = false;
+    final isHovering = _hoveringServicios[negocio] ?? false;
+    final isPressed = _pressedServicios[negocio] ?? false;
 
   return StatefulBuilder(
     builder: (context, setLocalState) {
@@ -94,9 +84,17 @@ class _DashboardPageState extends State<DashboardPage>
         onEnter: (_) => setState(() => _hoveringServicios[negocio] = true),
         onExit: (_) => setState(() => _hoveringServicios[negocio] = false),
         child: GestureDetector(
-          onTapDown: (_) => setLocalState(() => isPressed = true),
-          onTapUp: (_) => setLocalState(() => isPressed = false),
-          onTapCancel: () => setLocalState(() => isPressed = false),
+         onTapDown: (_) => setState(() {
+  _pressedServicios[negocio] = true;
+}),
+
+onTapUp: (_) => setState(() {
+  _pressedServicios[negocio] = false;
+}),
+
+onTapCancel: () => setState(() {
+  _pressedServicios[negocio] = false;
+}),
           onTap: () {
   final builder = paginasServicios[negocio];
 
@@ -107,8 +105,8 @@ class _DashboardPageState extends State<DashboardPage>
 
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (_, animation, __) => pagina,
-        transitionsBuilder: (_, animation, __, child) {
+        pageBuilder: (_, animation, _) => pagina,
+        transitionsBuilder: (_, animation, _, child) {
           return FadeTransition(opacity: animation, child: child);
         },
       ),
@@ -171,9 +169,9 @@ class _DashboardPageState extends State<DashboardPage>
           ),
         ),
       );
-    },
-  );
-}
+    }
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +214,7 @@ class _DashboardPageState extends State<DashboardPage>
           controller: _tabController,
           indicator: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha:0.15),
           ),
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
@@ -261,9 +259,9 @@ class _DashboardPageState extends State<DashboardPage>
                 padding: const EdgeInsets.all(20),
                 margin: const EdgeInsets.only(bottom: 30),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
                 child: const Column(
                   children: [
