@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:gestion_cliente/screens/inicio_screen.dart';
+import 'package:gestion_cliente/screens/root_page.dart';
 
 
 import 'register_screen.dart';
@@ -28,8 +28,8 @@ class _LoginPageState extends State<LoginPage> {
 
 
   Future<void> saveFcmToken() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
 
   final messaging = FirebaseMessaging.instance;
@@ -90,8 +90,8 @@ class _LoginPageState extends State<LoginPage> {
       // Usamos pushAndRemoveUntil para limpiar la memoria de la pantalla de login
       // y evitar que el usuario pueda volver atrás al login con el botón del móvil.
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const PaginaInicio()),
-        (Route<dynamic> route) => false,
+        MaterialPageRoute(builder: (context) => const RootPage()),
+        (route) => false,
       );
     } on FirebaseAuthException catch (e) {
       String errorMsg = "Ocurrió un error";
