@@ -15,16 +15,14 @@ class _WorkerCheckScreenState extends State<WorkerCheckScreen> {
   bool isLoading = true;
   bool isWorking = false;
 
-  DateTime? checkInTime;
-
   String name = "";
   String surname = "";
   String clase = "";
 
-  String today =
-      "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
-
   double weeklyHours = 0;
+
+  bool showHistory = false;
+  List<Map<String, dynamic>> weeklyHistory = [];
 
   @override
   void initState() {
@@ -32,16 +30,16 @@ class _WorkerCheckScreenState extends State<WorkerCheckScreen> {
     init();
   }
 
-  // ================= INIT =================
   Future<void> init() async {
-    await loadUser();
-    await loadTodayFichaje();
-    await loadWeeklyHours();
+    await Future.wait([
+      loadUser(),
+      loadCurrentStatus(),
+      loadWeeklyHours(),
+    ]);
 
     setState(() => isLoading = false);
   }
 
-  // ================= USER =================
   Future<void> loadUser() async {
     final doc = await FirebaseFirestore.instance
         .collection('users')
@@ -53,38 +51,37 @@ class _WorkerCheckScreenState extends State<WorkerCheckScreen> {
     clase = doc['clase'] ?? "";
   }
 
-  // ================= HOY =================
-  Future<void> loadTodayFichaje() async {
+  Future<void> loadCurrentStatus() async {
     final query = await FirebaseFirestore.instance
         .collection('time_logs')
         .where('employeeId', isEqualTo: user!.uid)
-        .where('date', isEqualTo: today)
+        .where('status', isEqualTo: 'open')
         .limit(1)
         .get();
 
-    if (query.docs.isNotEmpty) {
-      final doc = query.docs.first;
-
-      isWorking = doc['status'] == 'open';
-
-      if (isWorking) {
-        checkInTime = (doc['checkIn'] as Timestamp).toDate();
-      }
-    }
-
+    isWorking = query.docs.isNotEmpty;
     setState(() {});
   }
 
   // ================= CHECK IN =================
   Future<void> checkIn() async {
+    final existing = await FirebaseFirestore.instance
+        .collection('time_logs')
+        .where('employeeId', isEqualTo: user!.uid)
+        .where('status', isEqualTo: 'open')
+        .limit(1)
+        .get();
+
+    if (existing.docs.isNotEmpty) return;
+
     await FirebaseFirestore.instance.collection('time_logs').add({
       'employeeId': user!.uid,
-      'date': today,
-      'checkIn': FieldValue.serverTimestamp(),
+      'checkIn': Timestamp.now(), // clave
+      'checkInServer': FieldValue.serverTimestamp(),
       'status': 'open',
     });
 
-    await loadTodayFichaje();
+    await loadCurrentStatus();
   }
 
   // ================= CHECK OUT =================
@@ -92,47 +89,109 @@ class _WorkerCheckScreenState extends State<WorkerCheckScreen> {
     final query = await FirebaseFirestore.instance
         .collection('time_logs')
         .where('employeeId', isEqualTo: user!.uid)
-        .where('date', isEqualTo: today)
         .where('status', isEqualTo: 'open')
         .limit(1)
         .get();
 
-    if (query.docs.isNotEmpty) {
-      final doc = query.docs.first;
+    if (query.docs.isEmpty) return;
 
-      final checkIn =
-          (doc['checkIn'] as Timestamp).toDate();
+    final doc = query.docs.first;
 
-      final hours =
-          DateTime.now().difference(checkIn).inMinutes / 60;
+    final checkIn = (doc['checkIn'] as Timestamp).toDate();
+    final diff = DateTime.now().difference(checkIn);
 
-      await doc.reference.update({
-        'checkOut': FieldValue.serverTimestamp(),
-        'status': 'closed',
-        'workedHours': hours,
-      });
+    final hours = diff.inMinutes / 60;
+
+    // 🚫 evita fichajes basura
+    if (hours < 0.02) {
+      await doc.reference.delete();
+      await loadCurrentStatus();
+      return;
     }
 
-    await loadTodayFichaje();
-    await loadWeeklyHours();
+    await doc.reference.update({
+      'checkOut': FieldValue.serverTimestamp(),
+      'status': 'closed',
+      'workedHours': hours,
+    });
+
+    await Future.wait([
+      loadCurrentStatus(),
+      loadWeeklyHours(),
+    ]);
   }
 
-  // ================= SEMANA =================
+  // ================= HORAS SEMANALES =================
   Future<void> loadWeeklyHours() async {
+    DateTime now = DateTime.now();
+    DateTime start =
+        now.subtract(Duration(days: now.weekday - 1));
+
+    DateTime end = start.add(const Duration(days: 7));
+
     final query = await FirebaseFirestore.instance
         .collection('time_logs')
         .where('employeeId', isEqualTo: user!.uid)
+        .where('checkIn', isGreaterThanOrEqualTo: start)
+        .where('checkIn', isLessThan: end)
         .get();
 
     double total = 0;
 
     for (var doc in query.docs) {
-      if (doc.data()['workedHours'] != null) {
+      if (doc.data().containsKey('workedHours')) {
         total += (doc['workedHours'] as num).toDouble();
       }
     }
 
     weeklyHours = total;
+    setState(() {});
+  }
+
+  // ================= HISTORIAL =================
+  Future<void> loadWeeklyHistory() async {
+    DateTime now = DateTime.now();
+    DateTime limit = now.subtract(const Duration(days: 60));
+
+    final query = await FirebaseFirestore.instance
+        .collection('time_logs')
+        .where('employeeId', isEqualTo: user!.uid)
+        .where('checkIn', isGreaterThan: limit)
+        .get();
+
+    Map<String, double> weeks = {};
+
+    for (var doc in query.docs) {
+      if (!doc.data().containsKey('workedHours') ||
+          !doc.data().containsKey('checkIn')) {
+             continue;
+          }
+
+      DateTime date = (doc['checkIn'] as Timestamp).toDate();
+
+      DateTime start =
+          date.subtract(Duration(days: date.weekday - 1));
+
+      String key = "${start.year}-${start.month}-${start.day}";
+
+      weeks[key] = (weeks[key] ?? 0) +
+          (doc['workedHours'] as num).toDouble();
+    }
+
+    weeklyHistory = weeks.entries.map((e) {
+      DateTime start = DateTime.parse(e.key);
+      DateTime end = start.add(const Duration(days: 6));
+
+      return {
+        'start': start,
+        'end': end,
+        'hours': e.value,
+      };
+    }).toList();
+
+    weeklyHistory.sort((a, b) =>
+        b['start'].compareTo(a['start']));
+
     setState(() {});
   }
 
@@ -147,21 +206,12 @@ class _WorkerCheckScreenState extends State<WorkerCheckScreen> {
     }
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
       backgroundColor: const Color(0xFF1E293B),
-
-      // ================= APPBAR (MISMO ESTILO DASHBOARD) =================
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          "Fichaje trabajador",
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text("Fichaje trabajador"),
+        leading: const SizedBox(), // evita avatar raro
       ),
-
-      // ================= BACKGROUND GRADIENT =================
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -170,160 +220,187 @@ class _WorkerCheckScreenState extends State<WorkerCheckScreen> {
               Color(0xFF334155),
               Color(0xFF64B5F6),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
         ),
-
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
 
-                // ================= HEADER =================
-                _header(),
-
-                const SizedBox(height: 15),
-
-                // ================= FICHAJE =================
-                _fichajeCard(),
-
-                const SizedBox(height: 15),
-
-                // ================= HORAS =================
-                _hoursCard(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ================= HEADER =================
-  Widget _header() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "👋 Bienvenido $name $surname",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            "📚 Clase: $clase",
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= FICHAJE =================
-  Widget _fichajeCard() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isWorking
-            ? Colors.green.withOpacity(0.15)
-            : Colors.red.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-
-          Text(
-            isWorking
-                ? "🟢 Trabajando"
-                : "🔴 No fichado",
-            style: const TextStyle(color: Colors.white),
-          ),
-
-          const SizedBox(height: 10),
-
-          if (checkInTime != null)
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 500),
-              builder: (_, value, child) => Opacity(
-                opacity: value,
-                child: Text(
-                  "${checkInTime!.hour}:${checkInTime!.minute.toString().padLeft(2, '0')}",
-                  style: const TextStyle(
-                    fontSize: 28,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text("👋", style: TextStyle(fontSize: 24)),
+                        const SizedBox(width: 10),
+                        Text(
+                          "$name $surname",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+
+                    const SizedBox(height: 35),
+
+                    _toggle(),
+
+                    const SizedBox(height: 25),
+
+                    Expanded(
+                      child: showHistory
+                          ? _history()
+                          : _main(),
+                    ),
+                  ],
                 ),
               ),
             ),
-
-          const SizedBox(height: 15),
-
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  isWorking ? Colors.red : Colors.green,
-              minimumSize: const Size(double.infinity, 50),
-            ),
-            onPressed: () {
-              isWorking ? checkOut() : checkIn();
-            },
-            child: Text(
-              isWorking ? "FICHAR SALIDA" : "FICHAR ENTRADA",
-            ),
           ),
-        ],
+        ),
       ),
     );
   }
 
-  // ================= HORAS =================
-  Widget _hoursCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(20),
+  Widget _toggle() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _tab("Resumen", !showHistory),
+        const SizedBox(width: 10),
+        _tab("Historial", showHistory),
+      ],
+    );
+  }
+
+  Widget _tab(String text, bool active) {
+    return GestureDetector(
+      onTap: () async {
+        setState(() => showHistory = text == "Historial");
+
+        if (showHistory && weeklyHistory.isEmpty) {
+          await loadWeeklyHistory();
+        }
+      },
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(
+          color: active
+              ? Colors.blueAccent
+              : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(text,
+            style: const TextStyle(color: Colors.white)),
       ),
-      child: Column(
-        children: [
+    );
+  }
 
-          const Text(
-            "📊 Horas semanales",
-            style: TextStyle(color: Colors.white),
+  Widget _main() {
+    return Column(
+      children: [
+        _card(
+          Column(
+            children: [
+              Text(
+                isWorking ? "🟢 Trabajando" : "🔴 No fichado",
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 60,
+                width: 260,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isWorking ? Colors.redAccent : Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  onPressed: () {
+                    isWorking ? checkOut() : checkIn();
+                  },
+                  child: Text(
+                    isWorking
+                        ? "FICHAR SALIDA"
+                        : "FICHAR ENTRADA",
+                  ),
+                ),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 10),
-
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: weeklyHours),
-            duration: const Duration(milliseconds: 800),
-            builder: (_, value, __) {
-              return Text(
-                "${value.toStringAsFixed(2)} h",
+        ),
+        const SizedBox(height: 25),
+        _card(
+          Column(
+            children: [
+              const Text("📊 Horas semanales",
+                  style: TextStyle(color: Colors.white)),
+              const SizedBox(height: 10),
+              Text(
+                "${weeklyHours.toStringAsFixed(2)} h",
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 26,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
-              );
-            },
+              ),
+            ],
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _history() {
+    return ListView.builder(
+      itemCount: weeklyHistory.length,
+      itemBuilder: (_, i) {
+        final w = weeklyHistory[i];
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _card(
+            Row(
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "${w['start'].day}/${w['start'].month}/${w['start'].year} - "
+                  "${w['end'].day}/${w['end'].month}/${w['end'].year}",
+                  style: const TextStyle(color: Colors.white),
+                ),
+                Text(
+                  "${w['hours'].toStringAsFixed(1)} h",
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _card(Widget child) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
       ),
+      child: child,
     );
   }
 }
