@@ -384,4 +384,4 @@ class _FloatingHandState extends State<FloatingHand> with SingleTickerProviderSt
       child: const Icon(Icons.waving_hand, size: 40, color: Color(0xFF64B5F6)),
     );
   }
-}
+} 

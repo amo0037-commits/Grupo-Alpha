@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gestion_cliente/screens/inicio_screen.dart';
 import 'package:gestion_cliente/screens/root_page.dart';
-
 import 'register_screen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -26,70 +26,59 @@ class _LoginPageState extends State<LoginPage> {
     if (user == null) return;
 
     final messaging = FirebaseMessaging.instance;
-
-    // pedir permisos (solo la primera vez)
     await messaging.requestPermission();
-
-    // obtener token del dispositivo
     String? token = await messaging.getToken();
 
-    debugPrint("FCM TOKEN: $token");
-
     if (token != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'fcmToken': token},
-      );
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({'fcmToken': token});
     }
 
-    // si el token cambia en el futuro
     messaging.onTokenRefresh.listen((newToken) async {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'fcmToken': newToken},
-      );
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({'fcmToken': newToken});
     });
   }
 
   Future<void> login() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      _mostrarMensaje("Por favor, rellena todos los campos");
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      // 2. Intento de inicio de sesión
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      await saveFcmToken();
 
-      // 3. Verificación de montaje
       if (!mounted) return;
 
-      // 4. NAVEGACIÓN CRÍTICA:
-      // Usamos pushAndRemoveUntil para limpiar la memoria de la pantalla de login
-      // y evitar que el usuario pueda volver atrás al login con el botón del móvil.
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const RootPage()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
-      String errorMsg = "Ocurrió un error";
-      if (e.code == 'user-not-found') {
-        errorMsg = "Usuario no encontrado";
-      } else if (e.code == 'wrong-password') {
-        errorMsg = "Contraseña incorrecta";
-      } else if (e.code == 'invalid-email') {
-        errorMsg = "Email no válido";
-      }
-      _mostrarMensaje(errorMsg);
+      String mensaje = 'Error al iniciar sesión';
+      if (e.code == 'user-not-found') mensaje = 'Usuario no encontrado';
+      if (e.code == 'wrong-password') mensaje = 'Contraseña incorrecta';
+      if (e.code == 'invalid-email') mensaje = "Email no válido";
+      
+      _mostrarMensaje(mensaje);
     } catch (e) {
       _mostrarMensaje("Error inesperado: $e");
     } finally {
-      // Solo quitamos el loading si seguimos en esta pantalla
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // Asegúrate de que el método se llame así o cámbialo en el catch
   void _mostrarMensaje(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
@@ -105,7 +94,11 @@ class _LoginPageState extends State<LoginPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
+          colors: [
+            Color(0xFF1E293B),
+            Color(0xFF334155),
+            Color(0xFF64B5F6),
+          ],
         ),
       ),
       child: Scaffold(
@@ -117,7 +110,7 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () => Navigator.pop(context),
                 )
               : null,
-          title: const Text('Iniciar sesión'),
+          title: const Text('Iniciar sesión', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -131,15 +124,11 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-
-                // LOGO
                 Image.asset(
                   'assets/images/LogoAlphaAppPagInicio.png',
                   width: 180,
                 ),
-
                 const SizedBox(height: 40),
-
                 _glassField(
                   AnimatedTextField(
                     label: 'Email',
@@ -147,38 +136,24 @@ class _LoginPageState extends State<LoginPage> {
                     textInputAction: TextInputAction.next,
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 _glassField(
                   AnimatedTextField(
                     label: 'Contraseña',
-                    obscureText: true,
+                    isPasswordField: true, // Habilitamos el modo contraseña
                     controller: passwordController,
-                    textInputAction: TextInputAction
-                        .done, // Esto cambia el icono del teclado a un "Check" o "Done"
-                    onSubmitted:
-                        login, // Al pulsar el botón del teclado, llama a login()
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: login,
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // BOTÓN
                 GestureDetector(
-                  onTapDown: (_) {
-                    setState(() => _buttonPressed = true);
-                  },
-                  onTapUp: (_) {
-                    setState(() => _buttonPressed = false);
-                    login();
-                  },
-                  onTapCancel: () {
-                    setState(() => _buttonPressed = false);
-                  },
+                  onTapDown: (_) => setState(() => _buttonPressed = true),
+                  onTapUp: (_) => setState(() => _buttonPressed = false),
+                  onTapCancel: () => setState(() => _buttonPressed = false),
+                  onTap: login,
                   child: AnimatedScale(
                     duration: const Duration(milliseconds: 120),
-                    curve: Curves.easeOut,
                     scale: _buttonPressed ? 0.96 : 1.0,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 120),
@@ -189,60 +164,33 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(16),
                         gradient: LinearGradient(
                           colors: _buttonPressed
-                              ? [
-                                  const Color(0xFF2F6FE4),
-                                  const Color(0xFF4D94FF),
-                                ]
-                              : [
-                                  const Color(0xFF3B82F6),
-                                  const Color(0xFF60A5FA),
-                                ],
+                              ? [const Color(0xFF2F6FE4), const Color(0xFF4D94FF)]
+                              : [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
                         ),
-                        boxShadow: _buttonPressed
-                            ? [
-                                BoxShadow(
-                                  color: Colors.blueAccent.withValues(
-                                    alpha: 0.25,
-                                  ),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : [
-                                BoxShadow(
-                                  color: Colors.blueAccent.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blueAccent.withValues(alpha: _buttonPressed ? 0.25 : 0.4),
+                            blurRadius: _buttonPressed ? 10 : 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Center(
                         child: _isLoading
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                               )
                             : const Text(
                                 'Iniciar sesión',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                       ),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -250,10 +198,7 @@ class _LoginPageState extends State<LoginPage> {
                       MaterialPageRoute(builder: (_) => const RegisterPage()),
                     );
                   },
-                  child: const Text(
-                    '¿No tienes cuenta? Regístrate',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+                  child: const Text('¿No tienes cuenta? Regístrate', style: TextStyle(color: Colors.white70)),
                 ),
               ],
             ),
@@ -263,7 +208,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // GLASS EFFECT
   Widget _glassField(Widget child) {
     return Center(
       child: ConstrainedBox(
@@ -287,17 +231,16 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// TEXTFIELD
 class AnimatedTextField extends StatefulWidget {
   final String label;
-  final bool obscureText;
+  final bool isPasswordField; // Cambiado para identificar si es contraseña
   final TextEditingController controller;
   final TextInputAction? textInputAction;
   final VoidCallback? onSubmitted;
 
   const AnimatedTextField({
     required this.label,
-    this.obscureText = false,
+    this.isPasswordField = false,
     required this.controller,
     this.textInputAction,
     this.onSubmitted,
@@ -311,10 +254,12 @@ class AnimatedTextField extends StatefulWidget {
 class _AnimatedTextFieldState extends State<AnimatedTextField> {
   final FocusNode _focusNode = FocusNode();
   bool _hasFocus = false;
+  late bool _obscureText; // Estado interno para el ojo
 
   @override
   void initState() {
     super.initState();
+    _obscureText = widget.isPasswordField;
     _focusNode.addListener(() {
       setState(() => _hasFocus = _focusNode.hasFocus);
     });
@@ -332,25 +277,26 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
       style: const TextStyle(color: Colors.white),
       controller: widget.controller,
       focusNode: _focusNode,
-      obscureText: widget.obscureText,
-      textInputAction:
-          widget.textInputAction, // 'next' para email, 'done' para password
-      // Cambia/asegúrate de que esto esté así:
-      onSubmitted: (value) {
-        if (widget.onSubmitted != null) {
-          widget.onSubmitted!();
-        }
-      },
-
+      obscureText: _obscureText,
+      textInputAction: widget.textInputAction,
+      onSubmitted: (value) => widget.onSubmitted?.call(),
       decoration: InputDecoration(
         hintStyle: TextStyle(color: _hasFocus ? Colors.white : Colors.white70),
         hintText: widget.label,
-
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 18,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        // AÑADIMOS EL OJO AQUÍ
+        suffixIcon: widget.isPasswordField 
+          ? IconButton(
+              icon: Icon(
+                _obscureText ? Icons.visibility_off : Icons.visibility,
+                color: Colors.white70,
+              ),
+              onPressed: () {
+                setState(() => _obscureText = !_obscureText);
+              },
+            )
+          : null,
       ),
     );
   }
