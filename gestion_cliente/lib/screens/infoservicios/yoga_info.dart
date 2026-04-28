@@ -12,8 +12,6 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
  final Color agua = Color(0xFF64FFDA);
 
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   final List<Map<String, String>> clases = [
     {"title": "Yoga Suave", "image": "assets/images/yoga4.jpg"},
@@ -37,15 +35,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
       duration: const Duration(milliseconds: 900),
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.92,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
   }
@@ -120,7 +110,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     blurRadius: 25,
                   ),
                 ],
@@ -220,7 +210,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.75),
+                                  Colors.black.withValues(alpha: 0.75),
                                   Colors.transparent,
                                 ],
                               ),
@@ -264,7 +254,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
                                       decoration: BoxDecoration(
                                         boxShadow: [
                                           BoxShadow(
-                                            color: agua.withOpacity(0.25),
+                                            color: agua.withValues(alpha: 0.25),
                                             blurRadius: 18,
                                             spreadRadius: 1,
                                           ),
@@ -299,7 +289,7 @@ class _YogaInfoState extends State<YogaInfo>with SingleTickerProviderStateMixin 
 "Además, ofrecemos seguimiento personalizado donde cada alumno recibe orientación para mejorar su técnica, postura y progresión dentro de su práctica.\n\n"
 "Nuestro objetivo no es solo mejorar la condición física, sino también fomentar la calma, el equilibrio interior y un estilo de vida más consciente y saludable.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 15,
                         height: 1.5,
                       ),

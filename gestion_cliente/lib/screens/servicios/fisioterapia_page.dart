@@ -2,7 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:gestion_cliente/notifications_service.dart';
 
+// ─── Constantes ───────────────────────────────────────────────────────────────
+const _kColeccion = 'reservas';
+const _kEstadoActiva = 'activa';
+const _kCampoServicio = 'servicio';
+const _kCampoFecha = 'fecha';
+const _kCampoHora = 'hora';
+const _kCampoClase = 'clase';
+const _kCampoEstado = 'estado';
+const _kCampoUserId = 'userId';
+const _kMaxReservas = 5;
+const _kMaxSlotsPorDia = 8;
+
+// Especialistas que trabajan los sábados
+const _kEspecialistasSabado = ['Especialista 4', 'Especialista 5'];
+
+// ─── Widget principal ──────────────────────────────────────────────────────────
 class FisioterapiaPage extends StatefulWidget {
   final String userId;
   final String negocio;
@@ -20,7 +37,6 @@ class FisioterapiaPage extends StatefulWidget {
 class _FisioterapiaPageState extends State<FisioterapiaPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<DateTime> _blockedDays = [];
   Map<DateTime, int> _reservasPorDia = {};
   List<String> _horasDisponibles = [];
 
@@ -32,8 +48,11 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
     'Especialista 1',
     'Especialista 2',
     'Especialista 3',
+    'Especialista 4',
+    'Especialista 5',
   ];
 
+  // Todos los turnos posibles
   final List<String> horariosTotales = [
     '09:30',
     '10:30',
@@ -45,6 +64,17 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
     '18:30',
   ];
 
+  // Turnos de mañana (disponibles en sábado, hasta las 13:30 inclusive)
+  final List<String> horariosSabado = [
+    '09:30',
+    '10:30',
+    '11:30',
+    '12:30',
+    '13:30',
+  ];
+
+  // ─── Lifecycle ───────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
@@ -53,181 +83,207 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
     _horasDisponibles = List.from(horariosTotales);
   }
 
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  /// Devuelve solo la fecha sin hora, para comparar con Firestore.
+  DateTime _soloFecha(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// Especialistas disponibles según el día seleccionado.
+  List<String> get _especialistasFiltrados {
+    if (_selectedDay == null) return [];
+    return _selectedDay!.weekday == DateTime.saturday
+        ? ['Especialista 4', 'Especialista 5']
+        : ['Especialista 1', 'Especialista 2', 'Especialista 3'];
+  }
+
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+
+  // ─── Firestore ───────────────────────────────────────────────────────────────
+
   Future<void> _fetchBlockedDays() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('reservas')
-        .where('servicio', isEqualTo: widget.negocio)
-        .where('estado', isEqualTo: 'activa')
-        .get();
+    try {
+      final snapshot = await _db
+          .collection(_kColeccion)
+          .where(_kCampoServicio, isEqualTo: widget.negocio)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+          .get();
 
-    Map<DateTime, int> contador = {};
+      final Map<DateTime, int> contador = {};
+      for (var doc in snapshot.docs) {
+        final fecha = (doc[_kCampoFecha] as Timestamp).toDate();
+        final day = _soloFecha(fecha);
+        contador[day] = (contador[day] ?? 0) + 1;
+      }
 
-    for (var doc in snapshot.docs) {
-      DateTime fecha = (doc['fecha'] as Timestamp).toDate();
-      DateTime day = DateTime(fecha.year, fecha.month, fecha.day);
-
-      contador[day] = (contador[day] ?? 0) + 1;
-    }
-
-    if (mounted) {
-      setState(() {
-        _reservasPorDia = contador;
-        _blockedDays = contador.keys.toList();
-      });
+      if (mounted) {
+        setState(() => _reservasPorDia = contador);
+      }
+    } catch (e) {
+      _mostrar('Error al cargar el calendario. Inténtalo de nuevo.');
     }
   }
 
   Future<void> _actualizarHorasDisponibles() async {
     if (_selectedDay == null || _especialistaSeleccionado.isEmpty) return;
 
-    setState(() => _loading = true);
+    final esSabado = _selectedDay!.weekday == DateTime.saturday;
 
-    final isSaturday = _selectedDay!.weekday == DateTime.saturday;
-    final isSunday = _selectedDay!.weekday == DateTime.sunday;
-
-    if (isSunday) {
+    // Los sábados solo pueden reservar los especialistas de sábado
+    if (esSabado && !_kEspecialistasSabado.contains(_especialistaSeleccionado)) {
       setState(() {
         _horasDisponibles = [];
-        _loading = false;
+        _horaSeleccionada = '';
       });
+      _mostrar('Los sábados solo están disponibles Especialista 4 y 5');
       return;
     }
 
-    DateTime fecha = DateTime(
-      _selectedDay!.year,
-      _selectedDay!.month,
-      _selectedDay!.day,
-    );
+    setState(() => _loading = true);
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('reservas')
-        .where('servicio', isEqualTo: widget.negocio)
-        .where('fecha', isEqualTo: Timestamp.fromDate(fecha))
-        .where('clase', isEqualTo: _especialistaSeleccionado)
-        .where('estado', isEqualTo: 'activa')
-        .get();
+    try {
+      final fecha = _soloFecha(_selectedDay!);
 
-    List<String> ocupadas = snapshot.docs
-        .map((e) => e['hora'] as String)
-        .toList();
+      final snapshot = await _db
+          .collection(_kColeccion)
+          .where(_kCampoServicio, isEqualTo: widget.negocio)
+          .where(_kCampoFecha, isEqualTo: Timestamp.fromDate(fecha))
+          .where(_kCampoClase, isEqualTo: _especialistaSeleccionado)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+          .get();
 
-    List<String> disponibles = List.from(horariosTotales);
+      final ocupadas = snapshot.docs.map((e) => e[_kCampoHora] as String).toSet();
 
-    if (isSaturday) {
-      disponibles = disponibles
-          .where((h) => int.parse(h.split(':')[0]) < 14)
-          .toList();
+      // Base: turnos del día (sábado → solo mañana, resto → todos)
+      final base = esSabado ? horariosSabado : horariosTotales;
 
-      if (![
-        'Especialista 4',
-        'Especialista 5',
-      ].contains(_especialistaSeleccionado)) {
-        setState(() {
-          _horasDisponibles = [];
-          _loading = false;
-        });
-        _mostrar('Sábados solo Especialista 4 y 5');
-        return;
-      }
+      // Quitar los ya ocupados
+      final disponibles = base.where((h) => !ocupadas.contains(h)).toList();
+
+      setState(() {
+        _horasDisponibles = disponibles;
+        if (!_horasDisponibles.contains(_horaSeleccionada)) {
+          _horaSeleccionada = '';
+        }
+      });
+    } catch (e) {
+      _mostrar('Error al cargar los horarios. Inténtalo de nuevo.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
-
-    disponibles = disponibles.where((h) => !ocupadas.contains(h)).toList();
-
-    setState(() {
-      _horasDisponibles = disponibles;
-
-      if (!_horasDisponibles.contains(_horaSeleccionada)) {
-        _horaSeleccionada = '';
-      }
-
-      _loading = false;
-    });
   }
 
   Future<void> _reservar() async {
-  if (_selectedDay == null ||
-      _horaSeleccionada.isEmpty ||
-      _especialistaSeleccionado.isEmpty) {
-    _mostrar('Completa todos los campos');
-    return;
-  }
-
-  final isSaturday = _selectedDay!.weekday == DateTime.saturday;
-
-  if (isSaturday &&
-      !_especialistaSeleccionado.contains('Especialista 4') &&
-      !_especialistaSeleccionado.contains('Especialista 5')) {
-    _mostrar('Sábados solo Especialista 4 y 5');
-    return;
-  }
-
-  setState(() => _loading = true);
-
-  DateTime fecha = DateTime(
-    _selectedDay!.year,
-    _selectedDay!.month,
-    _selectedDay!.day,
-  );
-
-  try {
-    final mis = await FirebaseFirestore.instance
-        .collection('reservas')
-        .where('userId', isEqualTo: widget.userId)
-        .where('servicio', isEqualTo: widget.negocio)
-        .where('estado', isEqualTo: 'activa')
-        .get();
-
-    if (mis.docs.length >= 5) {
-      _mostrar('Máximo 5 reservas activas');
+    if (_selectedDay == null ||
+        _horaSeleccionada.isEmpty ||
+        _especialistaSeleccionado.isEmpty) {
+      _mostrar('Completa todos los campos');
       return;
     }
 
-    final check = await FirebaseFirestore.instance
-        .collection('reservas')
-        .where('servicio', isEqualTo: widget.negocio)
-        .where('fecha', isEqualTo: Timestamp.fromDate(fecha))
-        .where('clase', isEqualTo: _especialistaSeleccionado)
-        .where('hora', isEqualTo: _horaSeleccionada)
-        .where('estado', isEqualTo: 'activa')
-        .get();
+    // Guardar estos valores ANTES de cualquier setState que los limpie
+    final diaReserva = _soloFecha(_selectedDay!);
+    final horaReserva = _horaSeleccionada;
+    final especialistaReserva = _especialistaSeleccionado;
+    final esSabado = _selectedDay!.weekday == DateTime.saturday;
 
-    if (check.docs.isNotEmpty) {
-      _mostrar('Hora no disponible');
+    
+
+    // Validar sábado antes de ir a Firestore
+    if (esSabado && !_kEspecialistasSabado.contains(especialistaReserva)) {
+      _mostrar('Los sábados solo están disponibles Especialista 4 y 5');
       return;
     }
 
-    await FirebaseFirestore.instance.collection('reservas').add({
-      'userId': widget.userId,
-      'servicio': widget.negocio,
-      'fecha': fecha,
-      'hora': _horaSeleccionada,
-      'clase': _especialistaSeleccionado,
-      'estado': 'activa',
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    setState(() => _loading = true);
 
-    _mostrar('Reserva confirmada');
+    try {
+      // Comprobar límite de reservas activas del usuario
+      final misReservas = await _db
+          .collection(_kColeccion)
+          .where(_kCampoUserId, isEqualTo: widget.userId)
+          .where(_kCampoServicio, isEqualTo: widget.negocio)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+          .get();
 
-    _fetchBlockedDays();
+      if (misReservas.docs.length >= _kMaxReservas) {
+        _mostrar('Máximo $_kMaxReservas reservas activas');
+        return;
+      }
 
-    setState(() {
-      _selectedDay = null;
-      _horaSeleccionada = '';
-      _especialistaSeleccionado = '';
-      _horasDisponibles = List.from(horariosTotales);
-    });
-  } catch (e) {
-    _mostrar('Error al reservar');
-  } finally {
-    if (mounted) setState(() => _loading = false);
+      // Comprobar que el slot sigue libre (evitar doble reserva)
+      final check = await _db
+          .collection(_kColeccion)
+          .where(_kCampoServicio, isEqualTo: widget.negocio)
+          .where(_kCampoFecha, isEqualTo: Timestamp.fromDate(diaReserva))
+          .where(_kCampoClase, isEqualTo: especialistaReserva)
+          .where(_kCampoHora, isEqualTo: horaReserva)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+          .get();
+
+      if (check.docs.isNotEmpty) {
+        _mostrar('Esa hora ya no está disponible');
+        await _actualizarHorasDisponibles(); // refrescar UI
+        return;
+      }
+
+      //Añadido para crear notificaciones.
+      final partesHora = horaReserva.split(':');
+
+      final fechaCompleta = DateTime(
+        diaReserva.year,
+        diaReserva.month,
+        diaReserva.day,
+        int.parse(partesHora[0]),
+        int.parse(partesHora[1]),
+      );
+      // Crear la reserva
+      await _db.collection(_kColeccion).add({
+        _kCampoUserId: widget.userId,
+        _kCampoServicio: widget.negocio,
+        _kCampoFecha: Timestamp.fromDate(diaReserva),
+        _kCampoHora: horaReserva,
+        _kCampoClase: especialistaReserva,
+        _kCampoEstado: _kEstadoActiva,
+        'fechaHora': Timestamp.fromDate(fechaCompleta),
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      _mostrar('Reserva confirmada');
+
+      _fetchBlockedDays();
+
+      setState(() {
+        _selectedDay = null;
+        _horaSeleccionada = '';
+        _especialistaSeleccionado = '';
+        _horasDisponibles = List.from(horariosTotales);
+      });
+
+      try {
+        await NotificationsService.scheduleNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          servicio: widget.negocio,
+          especialista: especialistaReserva,
+          scheduledDate: fechaCompleta,
+        );
+      } catch (e) {
+        debugPrint('Error al programar notificación: $e');
+      }
+
+    } catch (e) {
+      _mostrar('Error al realizar la reserva. Inténtalo de nuevo.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
-}
 
   void _mostrar(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
     );
   }
+
+  // ─── Build ────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +292,6 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
 
-      // APPBAR
       appBar: AppBar(
         title: Text(
           widget.negocio,
@@ -252,6 +307,8 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
         ),
@@ -268,14 +325,12 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
             end: Alignment.bottomCenter,
           ),
         ),
-
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Center(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 450),
-
                 child: Column(
                   children: [
                     Image.asset(
@@ -286,324 +341,62 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
 
                     const SizedBox(height: 20),
 
-                    // CALENDARIO
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: TableCalendar(
-                        locale: 'es_ES',
-                        firstDay: DateTime.now(),
-                        lastDay: DateTime.now().add(const Duration(days: 365)),
-                        focusedDay: _focusedDay,
-                        startingDayOfWeek: StartingDayOfWeek.monday,
-                        selectedDayPredicate: (d) => isSameDay(_selectedDay, d),
-                        onDaySelected: (s, f) {
-                          setState(() {
-                            _selectedDay = s;
-                            _focusedDay = f;
-                          });
-                          _actualizarHorasDisponibles();
-                        },
-                        headerStyle: const HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                        ),
-                        enabledDayPredicate: (day) {
-                          return day.weekday != DateTime.sunday;
-                        },
-                        daysOfWeekStyle: const DaysOfWeekStyle(
-                          weekdayStyle: TextStyle(
-                            color: Color(0xFF5E3B8C), // morado oscuro elegante
-                            fontWeight: FontWeight.w600,
-                          ),
-
-                          weekendStyle: TextStyle(
-                            color: Color.fromARGB(221, 126, 117, 117),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        calendarStyle: const CalendarStyle(
-                          todayDecoration: BoxDecoration(
-                            color: Color(0xFF9575CD),
-                            shape: BoxShape.circle,
-                          ),
-                          selectedDecoration: BoxDecoration(
-                            color:Colors.blueAccent,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        calendarBuilders: CalendarBuilders(
-                          markerBuilder: (context, date, events) {
-                            final day = DateTime(
-                              date.year,
-                              date.month,
-                              date.day,
-                            );
-                            final count = _reservasPorDia[day] ?? 0;
-
-                            if (count == 0) return null;
-
-                            Color color;
-
-                            if (count >= 4) {
-                              color = Colors.orange;
-                            } else {
-                              color = Colors.green;
-                            }
-
-                            return Positioned(
-                              bottom: 6,
-                              child: Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            );
-                          },
-                          disabledBuilder: (context, date, focusedDay) {
-                            final day = DateTime(
-                              date.year,
-                              date.month,
-                              date.day,
-                            );
-
-                            final count = _reservasPorDia[day] ?? 0;
-
-                            if (count >= 8) {
-                              return Center(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.red.withOpacity(0.6),
-                                  ),
-                                  width: 30,
-                                  height: 30,
-                                ),
-                              );
-                            }
-
-                            return null;
-                          },
-                        ),
-                      ),
+                    // ── Calendario ──────────────────────────────────────────
+                    _CalendarioCard(
+                      focusedDay: _focusedDay,
+                      selectedDay: _selectedDay,
+                      reservasPorDia: _reservasPorDia,
+                      onDaySelected: (selected, focused) {
+                        setState(() {
+                          _selectedDay = selected;
+                          _focusedDay = focused;
+                          // Resetear si el especialista no trabaja este día
+                          if (!_especialistasFiltrados.contains(_especialistaSeleccionado)) {
+                            _especialistaSeleccionado = '';
+                            _horaSeleccionada = '';
+                            _horasDisponibles = [];
+                          }
+                        });
+                        _actualizarHorasDisponibles();
+                      },
                     ),
 
                     const SizedBox(height: 30),
 
-                    // ESPECIALISTA
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        alignment: AlignmentDirectional.center,
-
-                        value: _especialistaSeleccionado.isEmpty
-                            ? null
-                            : _especialistaSeleccionado,
-                        decoration: const InputDecoration(
-                          labelText: 'Selecciona Especialista',
-                          labelStyle: TextStyle(color: Colors.black87),
-                          floatingLabelStyle: TextStyle(color: Colors.black),
-
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        selectedItemBuilder: (context) {
-                          return especialistas.map((c) {
-                            return Center(
-                              child: Text(
-                                c,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.black),
-                              ),
-                            );
-                          }).toList();
-                        },
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.black,
-                        ),
-
-                        dropdownColor: Colors.white.withOpacity(0.95),
-
-                        items: especialistas.map((c) {
-                          return DropdownMenuItem(
-                            value: c,
-                            child: Center(child: Text(c)),
-                          );
-                        }).toList(),
-
-                        onChanged: (val) {
-                          setState(() => _especialistaSeleccionado = val!);
-                          _actualizarHorasDisponibles();
-                        },
-                      ),
+                    // ── Dropdown especialista ───────────────────────────────
+                    _DropdownCard(
+                      label: 'Selecciona Especialista',
+                      value: _especialistaSeleccionado.isEmpty
+                          ? null
+                          : _especialistaSeleccionado,
+                      items: _especialistasFiltrados,
+                      onChanged: (val) {
+                        setState(() => _especialistaSeleccionado = val!);
+                        _actualizarHorasDisponibles();
+                      },
                     ),
 
                     const SizedBox(height: 15),
 
-                    // DROPDOWN HORA
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        alignment: AlignmentDirectional.center,
-
-                        value: _horaSeleccionada.isEmpty
-                            ? null
-                            : _horaSeleccionada,
-
-                        decoration: InputDecoration(
-                          labelText: 'Hora disponible',
-                          labelStyle: const TextStyle(color: Colors.black87),
-                          floatingLabelStyle: const TextStyle(
-                            color: Colors.black,
-                          ),
-
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-
-                          isCollapsed: true,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.black,
-                        ),
-                        selectedItemBuilder: (context) {
-                          return _horasDisponibles.map((h) {
-                            return Center(
-                              child: Text(
-                                h,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.black),
-                              ),
-                            );
-                          }).toList();
-                        },
-
-                        dropdownColor: Colors.white.withOpacity(0.95),
-
-                        items: _horasDisponibles.map((h) {
-                          return DropdownMenuItem(
-                            value: h,
-                            child: Center(child: Text(h)),
-                          );
-                        }).toList(),
-
-                        onChanged: _selectedDay == null
-                            ? null
-                            : (val) => setState(() => _horaSeleccionada = val!),
-                      ),
+                    // ── Dropdown hora ───────────────────────────────────────
+                    _DropdownCard(
+                      label: 'Hora disponible',
+                      value: _horaSeleccionada.isEmpty ? null : _horaSeleccionada,
+                      items: _horasDisponibles,
+                      onChanged: _selectedDay == null
+                          ? null
+                          : (val) => setState(() => _horaSeleccionada = val!),
                     ),
 
                     const SizedBox(height: 35),
 
-                    // BOTÓN RESERVAR
-                    SizedBox(
-                      width: screenWidth * 0.7,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: _loading ? null : _reservar,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF1E293B),
-                                Color(0xFF334155),
-                                Color(0xFF64B5F6),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Container(
-                            alignment: Alignment.center,
-                            height: 55,
-                            child: _loading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : const Text(
-                                    'RESERVAR',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
+                    // ── Botón reservar ──────────────────────────────────────
+                    _BotonReservar(
+                      loading: _loading,
+                      screenWidth: screenWidth,
+                      onPressed: _reservar,
                     ),
+
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -614,18 +407,239 @@ class _FisioterapiaPageState extends State<FisioterapiaPage> {
       ),
     );
   }
+}
 
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      floatingLabelAlignment: FloatingLabelAlignment.center,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
+// ─── Subwidgets privados ───────────────────────────────────────────────────────
+
+class _CalendarioCard extends StatelessWidget {
+  final DateTime focusedDay;
+  final DateTime? selectedDay;
+  final Map<DateTime, int> reservasPorDia;
+  final void Function(DateTime, DateTime) onDaySelected;
+
+  const _CalendarioCard({
+    required this.focusedDay,
+    required this.selectedDay,
+    required this.reservasPorDia,
+    required this.onDaySelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: TableCalendar(
+        locale: 'es_ES',
+        firstDay: DateTime.now(),
+        lastDay: DateTime.now().add(const Duration(days: 365)),
+        focusedDay: focusedDay,
+        startingDayOfWeek: StartingDayOfWeek.monday,
+        selectedDayPredicate: (d) => isSameDay(selectedDay, d),
+        onDaySelected: onDaySelected,
+        enabledDayPredicate: (day) => day.weekday != DateTime.sunday,
+        headerStyle: const HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+        ),
+        daysOfWeekStyle: const DaysOfWeekStyle(
+          weekdayStyle: TextStyle(
+            color: Color(0xFF5E3B8C),
+            fontWeight: FontWeight.w600,
+          ),
+          weekendStyle: TextStyle(
+            color: Color(0xFF5E3B8C), // sábado igual que los días de semana
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        calendarStyle: CalendarStyle(
+          // Texto del sábado en morado, domingo en gris
+          defaultTextStyle: const TextStyle(color: Colors.black87),
+          weekendTextStyle: const TextStyle(color: Color(0xFF5E3B8C)),
+          disabledTextStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
+          todayDecoration: const BoxDecoration(
+            color: Color(0xFF9575CD),
+            shape: BoxShape.circle,
+          ),
+          selectedDecoration: const BoxDecoration(
+            color: Colors.blueAccent,
+            shape: BoxShape.circle,
+          ),
+        ),
+        calendarBuilders: CalendarBuilders(
+          markerBuilder: (context, date, events) {
+            final day = DateTime(date.year, date.month, date.day);
+            final count = reservasPorDia[day] ?? 0;
+            if (count == 0) return null;
+
+            return Positioned(
+              bottom: 6,
+              child: Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: count >= 4 ? Colors.orange : Colors.green,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            );
+          },
+          disabledBuilder: (context, date, focusedDay) {
+            final day = DateTime(date.year, date.month, date.day);
+            final count = reservasPorDia[day] ?? 0;
+
+            if (count >= _kMaxSlotsPorDia) {
+              return Center(
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withValues(alpha: 0.6),
+                  ),
+                ),
+              );
+            }
+            return null;
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _DropdownCard extends StatelessWidget {
+  final String label;
+  final String? value;
+  final List<String> items;
+  final void Function(String?)? onChanged;
+
+  const _DropdownCard({
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: DropdownButtonFormField<String>(
+        isExpanded: true,
+        alignment: AlignmentDirectional.center,
+        initialValue: value,
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          isDense: true,
+          contentPadding: EdgeInsets.zero,
+        ),
+        hint: Center(
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        selectedItemBuilder: (context) => items
+            .map((c) => Center(
+                  child: Text(
+                    c,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                ))
+            .toList(),
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+        dropdownColor: Colors.white.withValues(alpha: 0.95),
+        items: items
+            .map((c) => DropdownMenuItem(
+                  value: c,
+                  child: Center(child: Text(c)),
+                ))
+            .toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
+}
+
+class _BotonReservar extends StatelessWidget {
+  final bool loading;
+  final double screenWidth;
+  final VoidCallback onPressed;
+
+  const _BotonReservar({
+    required this.loading,
+    required this.screenWidth,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: screenWidth * 0.7,
+      height: 55,
+      child: ElevatedButton(
+        onPressed: loading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Container(
+            alignment: Alignment.center,
+            height: 55,
+            child: loading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text(
+                    'RESERVAR',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        ),
+      ),
     );
   }
 }
