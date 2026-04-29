@@ -231,39 +231,146 @@ class _PaginaInicioState extends State<PaginaInicio> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildQuickCard(IconData icon, String title, VoidCallback onTap,
-      {bool isLoading = false}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: InkWell(
-          onTap: isLoading ? null : onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+ Widget _buildQuickCard(
+  IconData icon,
+  String title,
+  VoidCallback onTap, {
+  bool isLoading = false,
+}) {
+  bool isPressed = false;
+
+  return StatefulBuilder(
+    builder: (context, setState) {
+      return AnimatedScale(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        scale: isPressed ? 0.96 : 1.0,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 120),
+          opacity: isPressed ? 0.85 : 1.0,
+          child: GestureDetector(
+            onTapDown: (_) => setState(() => isPressed = true),
+            onTapUp: (_) {
+              setState(() => isPressed = false);
+              onTap();
+            },
+            onTapCancel: () => setState(() => isPressed = false),
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (isLoading)
-                  const CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                else
-                  Icon(icon, size: 40, color: Colors.blueAccent),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 120),
+                  decoration: BoxDecoration(
+                    color: isPressed
+                        ? Colors.white.withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isPressed
+                          ? Colors.blueAccent.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.2),
+                    ),
+                    boxShadow: isPressed
+                        ? [
+                            BoxShadow(
+                              color: Colors.blueAccent.withValues(alpha: 0.25),
+                              blurRadius: 15,
+                              offset: const Offset(0, 4),
+                            )
+                          ]
+                        : [],
+                  ),
+                  child: SizedBox(
+                    height: double.infinity,
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (isLoading)
+                          const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          )
+                        else
+                          Icon(icon, size: 40, color: Colors.blueAccent),
+                        const SizedBox(height: 10),
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
+          ),
+        ),
+      );
+    },
+  );
+}
+}
+class AnimatedAppBarButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final double size;
+
+  const AnimatedAppBarButton({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    required this.size,
+  });
+
+  @override
+  State<AnimatedAppBarButton> createState() => _AnimatedAppBarButtonState();
+}
+
+class _AnimatedAppBarButtonState extends State<AnimatedAppBarButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        scale: _pressed ? 0.85 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _pressed
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.transparent,
+            shape: BoxShape.circle,
+            boxShadow: _pressed
+                ? [
+                    BoxShadow(
+                      color: Colors.blueAccent.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : [],
+          ),
+          child: Icon(
+            widget.icon,
+            size: widget.size,
+            color: Colors.white,
           ),
         ),
       ),

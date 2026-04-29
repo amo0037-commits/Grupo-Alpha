@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:gestion_cliente/notifications_service.dart';
 
 class YogaPage extends StatefulWidget {
   final String userId;
@@ -21,7 +22,6 @@ class _YogaPageState extends State<YogaPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  List<DateTime> _blockedDays = [];
   List<String> _horasDisponibles = [];
 
   String _horaSeleccionada = '';
@@ -67,7 +67,6 @@ class _YogaPageState extends State<YogaPage> {
 
       if (mounted) {
         setState(() {
-          _blockedDays = blocked;
         });
       }
     } catch (e) {
@@ -170,6 +169,15 @@ class _YogaPageState extends State<YogaPage> {
         return;
       }
 
+      final partesHora = _horaSeleccionada.split(':');
+      final fechaCompleta = DateTime(
+        fechaBusqueda.year,
+        fechaBusqueda.month,
+        fechaBusqueda.day,
+        int.parse(partesHora[0]),
+        int.parse(partesHora[1]),
+      );
+
       await FirebaseFirestore.instance.collection('reservas').add({
         'userId': widget.userId,
         'servicio': widget.negocio,
@@ -177,6 +185,7 @@ class _YogaPageState extends State<YogaPage> {
         'hora': _horaSeleccionada,
         'clase': _claseSeleccionada,
         'estado': 'activa',
+        'fechaHora': Timestamp.fromDate(fechaCompleta),
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -190,6 +199,18 @@ class _YogaPageState extends State<YogaPage> {
       });
 
       _fetchBlockedDays();
+
+      try {
+        await NotificationsService.scheduleNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          servicio: widget.negocio,
+          especialista: _claseSeleccionada,
+          scheduledDate: fechaCompleta,
+        );
+      } catch (e) {
+        debugPrint('Error al programar notificación: $e');
+      }
+
     } catch (e) {
       _mensaje("Error: $e");
     } finally {
@@ -273,14 +294,14 @@ class _YogaPageState extends State<YogaPage> {
                     // CALENDARIO (FIX "2 WEEKS")
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -338,17 +359,15 @@ class _YogaPageState extends State<YogaPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
-                        value: _claseSeleccionada.isEmpty
-                            ? null
-                            : _claseSeleccionada,
+                        initialValue: _claseSeleccionada.isEmpty ? null : _claseSeleccionada,
                         decoration: const InputDecoration(
                           labelText: 'Tipo de Yoga',
                           border: InputBorder.none,
@@ -377,17 +396,16 @@ class _YogaPageState extends State<YogaPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
-                        value: _horaSeleccionada.isEmpty
-                            ? null
-                            : _horaSeleccionada,
+                        initialValue: _horaSeleccionada.isEmpty ? null : _horaSeleccionada,
+                           
                         decoration: const InputDecoration(
                           labelText: 'Hora disponible',
                           border: InputBorder.none,
