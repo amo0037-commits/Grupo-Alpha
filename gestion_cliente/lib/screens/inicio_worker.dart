@@ -11,35 +11,34 @@ class InicioWorker extends StatefulWidget {
 
 class _InicioWorkerState extends State<InicioWorker>
     with SingleTickerProviderStateMixin {
-  late AnimationController _iconController;
-  late Animation<double> _iconAnim;
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
     super.initState();
 
-    _iconController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    );
+    )..repeat(reverse: true);
 
-    _iconAnim = Tween<double>(begin: 0, end: 8).animate(
-      CurvedAnimation(parent: _iconController, curve: Curves.easeInOut),
-    );
-
-    _iconController.repeat(reverse: true);
+    _scaleAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.10,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
   void dispose() {
-    _iconController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    double logoSize = screenWidth < 600 ? screenWidth * 0.55 : 280;
+    
+    
 
     return Container(
       decoration: const BoxDecoration(
@@ -82,110 +81,141 @@ class _InicioWorkerState extends State<InicioWorker>
                 children: [
                   const SizedBox(height: 30),
 
-                  // LOGO
-                  Image.asset(
-                    'assets/images/LogoAlphaAppPagInicio.png',
-                    width: logoSize,
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // 🧱 CARD GRANDE
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Center(
-                      child: ClipOval(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                          child: Container(
-                            width: 280, //
-                            height: 280, //
-
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.12),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                              ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 25,
-                                  offset: const Offset(0, 12),
-                                ),
-                              ],
+                  
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blueAccent.withValues(alpha: 0.7),
+                          blurRadius: 40,
+                          spreadRadius: 6,
+                        ),
+                        BoxShadow(
+                          color: Colors.blueAccent.withValues(alpha: 0.3),
+                          blurRadius: 90,
+                          spreadRadius: 12,
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Container(
+                          width: 320,
+                          height: 320,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                            border: Border.all(
+                              color: Colors.blueAccent.withValues(alpha: 0.5),
                             ),
+                            shape: BoxShape.circle,
+                          ),
 
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                AnimatedBuilder(
-                                  animation: _iconAnim,
-                                  builder: (context, child) {
-                                    return Transform.translate(
-                                      offset: Offset(0, -_iconAnim.value),
-                                      child: child,
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.blueAccent.withValues(
-                                        alpha: 0.15,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              
+                              AnimatedBuilder(
+                                animation: _scaleAnim,
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: _scaleAnim.value,
+                                    child: child,
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF1E88E5,
+                                        ).withValues(alpha: 0.35), 
+                                        blurRadius: 18,
+                                        spreadRadius: 1,
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.blueAccent.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          blurRadius: 20,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.work_outline,
-                                      size: 40,
-                                      color: Colors.blueAccent,
-                                    ),
+                                      BoxShadow(
+                                        color: const Color(0xFF1565C0)
+                                            .withValues(
+                                              alpha: 0.25,
+                                            ), 
+                                        blurRadius: 34,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Image.asset(
+                                    'assets/images/LogoAlphaAppPagInicio.png',
+                                    width: 240,
+                                    fit: BoxFit.contain,
                                   ),
                                 ),
+                              ),
 
-                                const SizedBox(height: 12),
+                              const SizedBox(height: 10),
 
-                                const Text(
-                                  "Panel de trabajador",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 20),
-                                  child: Text(
-                                    "Accede a tus herramientas",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
+                              
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0, end: 1),
+                                duration: const Duration(seconds: 3),
+                                builder: (context, value, child) {
+                                  return ShaderMask(
+                                    shaderCallback: (bounds) {
+                                      return LinearGradient(
+                                        begin: Alignment(-1 + value * 2, 0),
+                                        end: Alignment(1 + value * 2, 0),
+                                        colors: const [
+                                          Colors.white,
+                                          Colors.blueAccent,
+                                          Colors.cyan,
+                                          Colors.white,
+                                        ],
+                                        stops: const [0.0, 0.3, 0.6, 1.0],
+                                      ).createShader(bounds);
+                                    },
+                                    child: const Text(
+                                      "Zona de empleados",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1.2,
+                                        color: Colors
+                                            .white, 
+                                      ),
                                     ),
-                                  ),
+                                  );
+                                },
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              
+                              AnimatedBuilder(
+                                animation: _scaleAnim,
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: 1.0 + (_scaleAnim.value - 1.0) * 0.5,
+                                    child: child,
+                                  );
+                                },
+                                child: const Icon(
+                                  Icons.work_outline,
+                                  color: Colors.white,
+                                  size: 26,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 60),
 
+                  
                   HoverButton(
                     icon: Icons.how_to_reg,
                     text: "Fichar entrada/salida",
@@ -198,13 +228,15 @@ class _InicioWorkerState extends State<InicioWorker>
                       );
                     },
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
+
                   HoverButton(
                     icon: Icons.schedule,
                     text: "Agenda",
                     onTap: () {},
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
+
                   HoverButton(icon: Icons.person, text: "Perfil", onTap: () {}),
 
                   const SizedBox(height: 30),
@@ -216,9 +248,9 @@ class _InicioWorkerState extends State<InicioWorker>
       ),
     );
   }
-
-  //
 }
+
+
 
 class HoverButton extends StatefulWidget {
   final IconData icon;
@@ -242,8 +274,6 @@ class _HoverButtonState extends State<HoverButton> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    //
     double maxWidth = screenWidth > 600 ? 420 : double.infinity;
 
     return Center(
@@ -261,9 +291,7 @@ class _HoverButtonState extends State<HoverButton> {
                 onTap: widget.onTap,
                 child: Container(
                   height: 60,
-
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(18),
@@ -280,7 +308,6 @@ class _HoverButtonState extends State<HoverButton> {
                           ]
                         : [],
                   ),
-
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
