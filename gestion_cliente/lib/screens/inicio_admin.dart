@@ -263,12 +263,19 @@ class _NegocioTab extends StatelessWidget {
 
 // ─── PANTALLA SERVICIOS ────────────────────────────────────────────────────
 
-class _ServiciosScreen extends StatelessWidget {
+class _ServiciosScreen extends StatefulWidget {
   final Negocio negocio;
   const _ServiciosScreen({required this.negocio});
 
   @override
+  State<_ServiciosScreen> createState() => _ServiciosScreenState();
+}
+
+class _ServiciosScreenState extends State<_ServiciosScreen> {
+  @override
   Widget build(BuildContext context) {
+    final negocio = widget.negocio;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -296,15 +303,23 @@ class _ServiciosScreen extends StatelessWidget {
           itemCount: negocio.servicios.length,
           itemBuilder: (context, i) {
             final s = negocio.servicios[i];
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => _DetalleServicioScreen(servicio: s, color: negocio.color),
-                  ),
-                ),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => _DetalleServicioScreen(
+                        servicio: s,
+                        color: negocio.color,
+                      ),
+                    ),
+                  );
+
+                  setState(() {}); // 🔥 REFRESCA AL VOLVER
+                },
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -328,17 +343,25 @@ class _ServiciosScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(s.nombre, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                            Text(s.nombre,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600)),
                             const SizedBox(height: 3),
-                            Text('${s.duracionMinutos} min · ${s.precio.toStringAsFixed(0)}€',
-                                style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                            Text(
+                              '${s.duracionMinutos} min · ${s.precio.toStringAsFixed(0)}€',
+                              style: const TextStyle(color: Colors.white60, fontSize: 12),
+                            ),
                           ],
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: s.activo ? Colors.green.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
+                          color: s.activo
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : Colors.red.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
