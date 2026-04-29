@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'profile_worker.dart';
+import 'package:gestion_cliente/screens/worker_check_screen.dart';
 
 class InicioWorker extends StatefulWidget {
   const InicioWorker({super.key});
@@ -212,7 +213,14 @@ class _InicioWorkerState extends State<InicioWorker>
                   HoverButton(
                     icon: Icons.how_to_reg,
                     text: "Fichar entrada/salida",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WorkerCheckScreen(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 20),
 

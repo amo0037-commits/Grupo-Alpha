@@ -5,52 +5,74 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_cliente/screens/root_page.dart';
 
+
 import 'register_screen.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
+
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+
   bool _buttonPressed = false;
   bool _isLoading = false;
+
 
   Future<void> saveFcmToken() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final messaging = FirebaseMessaging.instance;
 
-    // pedir permisos (solo la primera vez)
-    await messaging.requestPermission();
+  final messaging = FirebaseMessaging.instance;
 
-    // obtener token del dispositivo
-    String? token = await messaging.getToken();
 
-    debugPrint("FCM TOKEN: $token");
+  // pedir permisos (solo la primera vez)
+  await messaging.requestPermission();
 
-    if (token != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'fcmToken': token},
-      );
-    }
 
-    // si el token cambia en el futuro
-    messaging.onTokenRefresh.listen((newToken) async {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'fcmToken': newToken},
-      );
-    });
+  // obtener token del dispositivo
+  String? token = await messaging.getToken();
+
+
+  debugPrint("FCM TOKEN: $token");
+
+
+  if (token != null) {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          'fcmToken': token,
+        });
   }
+
+
+  // si el token cambia en el futuro
+  messaging.onTokenRefresh.listen((newToken) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .update({
+          'fcmToken': newToken,
+        });
+  });
+}
+
+
+
 
   Future<void> login() async {
     setState(() => _isLoading = true);
+
 
     try {
       // 2. Intento de inicio de sesión
@@ -59,8 +81,10 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordController.text.trim(),
       );
 
+
       // 3. Verificación de montaje
       if (!mounted) return;
+
 
       // 4. NAVEGACIÓN CRÍTICA:
       // Usamos pushAndRemoveUntil para limpiar la memoria de la pantalla de login
@@ -89,6 +113,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+
   // Asegúrate de que el método se llame así o cámbialo en el catch
   void _mostrarMensaje(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -96,16 +121,22 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+
 
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
+          colors: [
+            Color(0xFF1E293B),
+            Color(0xFF334155),
+            Color(0xFF64B5F6),
+          ],
         ),
       ),
       child: Scaffold(
@@ -132,13 +163,16 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const SizedBox(height: 40),
 
+
                 // LOGO
                 Image.asset(
                   'assets/images/LogoAlphaAppPagInicio.png',
                   width: 180,
                 ),
 
+
                 const SizedBox(height: 40),
+
 
                 _glassField(
                   AnimatedTextField(
@@ -148,7 +182,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
+
                 const SizedBox(height: 20),
+
 
                 _glassField(
                   AnimatedTextField(
@@ -162,7 +198,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
+
                 const SizedBox(height: 30),
+
 
                 // BOTÓN
                 GestureDetector(
@@ -241,7 +279,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
+
                 const SizedBox(height: 20),
+
 
                 TextButton(
                   onPressed: () {
@@ -262,6 +302,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
 
   // GLASS EFFECT
   Widget _glassField(Widget child) {
@@ -287,6 +328,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
+
 // TEXTFIELD
 class AnimatedTextField extends StatefulWidget {
   final String label;
@@ -294,6 +336,7 @@ class AnimatedTextField extends StatefulWidget {
   final TextEditingController controller;
   final TextInputAction? textInputAction;
   final VoidCallback? onSubmitted;
+
 
   const AnimatedTextField({
     required this.label,
@@ -304,13 +347,16 @@ class AnimatedTextField extends StatefulWidget {
     super.key,
   });
 
+
   @override
   State<AnimatedTextField> createState() => _AnimatedTextFieldState();
 }
 
+
 class _AnimatedTextFieldState extends State<AnimatedTextField> {
   final FocusNode _focusNode = FocusNode();
   bool _hasFocus = false;
+
 
   @override
   void initState() {
@@ -320,11 +366,13 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
     });
   }
 
+
   @override
   void dispose() {
     _focusNode.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -342,9 +390,11 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
         }
       },
 
+
       decoration: InputDecoration(
         hintStyle: TextStyle(color: _hasFocus ? Colors.white : Colors.white70),
         hintText: widget.label,
+
 
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(
