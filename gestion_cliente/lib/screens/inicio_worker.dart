@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'profile_worker.dart';
 
 class InicioWorker extends StatefulWidget {
   const InicioWorker({super.key});
@@ -37,9 +38,6 @@ class _InicioWorkerState extends State<InicioWorker>
 
   @override
   Widget build(BuildContext context) {
-    
-    
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -81,7 +79,6 @@ class _InicioWorkerState extends State<InicioWorker>
                 children: [
                   const SizedBox(height: 30),
 
-                  
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -105,7 +102,9 @@ class _InicioWorkerState extends State<InicioWorker>
                           width: 320,
                           height: 320,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                            color: const Color(
+                              0xFF0F172A,
+                            ).withValues(alpha: 0.85),
                             border: Border.all(
                               color: Colors.blueAccent.withValues(alpha: 0.5),
                             ),
@@ -115,7 +114,6 @@ class _InicioWorkerState extends State<InicioWorker>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              
                               AnimatedBuilder(
                                 animation: _scaleAnim,
                                 builder: (context, child) {
@@ -132,15 +130,14 @@ class _InicioWorkerState extends State<InicioWorker>
                                       BoxShadow(
                                         color: const Color(
                                           0xFF1E88E5,
-                                        ).withValues(alpha: 0.35), 
+                                        ).withValues(alpha: 0.35),
                                         blurRadius: 18,
                                         spreadRadius: 1,
                                       ),
                                       BoxShadow(
-                                        color: const Color(0xFF1565C0)
-                                            .withValues(
-                                              alpha: 0.25,
-                                            ), 
+                                        color: const Color(
+                                          0xFF1565C0,
+                                        ).withValues(alpha: 0.25),
                                         blurRadius: 34,
                                         spreadRadius: 2,
                                       ),
@@ -156,7 +153,6 @@ class _InicioWorkerState extends State<InicioWorker>
 
                               const SizedBox(height: 10),
 
-                              
                               TweenAnimationBuilder<double>(
                                 tween: Tween(begin: 0, end: 1),
                                 duration: const Duration(seconds: 3),
@@ -181,8 +177,7 @@ class _InicioWorkerState extends State<InicioWorker>
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
                                         letterSpacing: 1.2,
-                                        color: Colors
-                                            .white, 
+                                        color: Colors.white,
                                       ),
                                     ),
                                   );
@@ -191,7 +186,6 @@ class _InicioWorkerState extends State<InicioWorker>
 
                               const SizedBox(height: 12),
 
-                              
                               AnimatedBuilder(
                                 animation: _scaleAnim,
                                 builder: (context, child) {
@@ -215,7 +209,6 @@ class _InicioWorkerState extends State<InicioWorker>
 
                   const SizedBox(height: 60),
 
-                  
                   HoverButton(
                     icon: Icons.how_to_reg,
                     text: "Fichar entrada/salida",
@@ -230,7 +223,18 @@ class _InicioWorkerState extends State<InicioWorker>
                   ),
                   const SizedBox(height: 20),
 
-                  HoverButton(icon: Icons.person, text: "Perfil", onTap: () {}),
+                  HoverButton(
+                    icon: Icons.person,
+                    text: "Perfil",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const WorkerProfilePage(),
+                        ),
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 30),
                 ],
@@ -242,8 +246,6 @@ class _InicioWorkerState extends State<InicioWorker>
     );
   }
 }
-
-
 
 class HoverButton extends StatefulWidget {
   final IconData icon;
