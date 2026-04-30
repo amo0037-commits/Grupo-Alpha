@@ -132,7 +132,32 @@ Future<void> loginWithGoogle() async {
   } finally {
     if (mounted) setState(() => _isLoading = false);
   }
+  final user = FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+  final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+  final doc = await docRef.get();
+
+  if (!doc.exists) {
+    // 🔥 Separar nombre y apellidos (simple)
+    final parts = (user.displayName ?? "").split(" ");
+
+    final nombre = parts.isNotEmpty ? parts.first : "";
+    final apellidos = parts.length > 1 ? parts.sublist(1).join(" ") : "";
+
+    await docRef.set({
+      'nombre': nombre,
+      'apellidos': apellidos,
+      'telefono': '',
+      'email': user.email,
+      'createdAt': Timestamp.now(),
+    });
+  }
 }
+}
+
+
 
 
   Future<void> login() async {
@@ -333,35 +358,9 @@ Future<void> loginWithGoogle() async {
 
                 const SizedBox(height: 10),
 
-GestureDetector(
-  onTap: loginWithGoogle,
-  child: Container(
-    height: 55,
-    width: double.infinity,
-    constraints: const BoxConstraints(maxWidth: 400),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      AnimatedGoogleButton(
+        onTap: loginWithGoogle,
     ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          'assets/images/google_logo.png', // añade este icono
-          height: 24,
-        ),
-        const SizedBox(width: 10),
-        const Text(
-          'Continuar con Google',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    ),
-  ),
-),
 
                 const SizedBox(height: 20),
 
@@ -428,6 +427,89 @@ class AnimatedTextField extends StatefulWidget {
 
   @override
   State<AnimatedTextField> createState() => _AnimatedTextFieldState();
+}
+
+class AnimatedGoogleButton extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const AnimatedGoogleButton({super.key, required this.onTap});
+
+  @override
+  State<AnimatedGoogleButton> createState() => _AnimatedGoogleButtonState();
+}
+
+class _AnimatedGoogleButtonState extends State<AnimatedGoogleButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) {
+        _setPressed(false);
+        widget.onTap();
+      },
+      onTapCancel: () => _setPressed(false),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        scale: _pressed ? 0.94 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          height: 55,
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: _pressed ? Colors.grey.shade200 : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: _pressed
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: _pressed ? 0.9 : 1.0,
+                duration: const Duration(milliseconds: 120),
+                child: Image.asset(
+                  'assets/images/google_logo.png',
+                  height: 24,
+                ),
+              ),
+              const SizedBox(width: 10),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 120),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: _pressed
+                      ? FontWeight.w700
+                      : FontWeight.w600,
+                ),
+                child: const Text('Continuar con Google'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _AnimatedTextFieldState extends State<AnimatedTextField> {
