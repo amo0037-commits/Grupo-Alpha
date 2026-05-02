@@ -15,7 +15,7 @@ import 'package:gestion_cliente/screens/servicios/yoga_page.dart';
 import 'package:gestion_cliente/screens/servicios/peluqueria_page.dart';
 import 'package:gestion_cliente/screens/servicios/fisioterapia_page.dart';
 import 'package:gestion_cliente/screens/servicios/academia_page.dart';
-import 'package:gestion_cliente/screens/splash_screen.dart';
+//import 'package:gestion_cliente/screens/splash_screen.dart';
 
 void main() async {
   // Firebase
