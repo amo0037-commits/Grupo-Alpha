@@ -5,6 +5,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_cliente/screens/root_page.dart';
 
+import 'package:gestion_cliente/screens/inicio_screen.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 
 import 'register_screen.dart';
 
@@ -22,15 +25,37 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  @override
+void initState() {
+  super.initState();
+  _initGoogle();
+}
 
   bool _buttonPressed = false;
   bool _isLoading = false;
 
+  Future<void> _initGoogle() async {
+  try {
+    await googleSignIn.initialize();
+  } catch (e) {
+    debugPrint("Error inicializando Google: $e");
+  }
+}
 
   Future<void> saveFcmToken() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+
+  final doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+  final exists = (await doc.get()).exists;
+
+  if (!exists) {
+  await doc.set({
+    'email': user.email,
+    'createdAt': Timestamp.now(),
+  });
 
   final messaging = FirebaseMessaging.instance;
 
@@ -66,6 +91,83 @@ class _LoginPageState extends State<LoginPage> {
         });
   });
 }
+  }
+
+ final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+
+Future<void> loginWithGoogle() async {
+  if (_isLoading) return;
+
+  setState(() => _isLoading = true);
+
+  try {
+    UserCredential userCredential;
+
+    if (kIsWeb) {
+      // 🌐 WEB
+      final provider = GoogleAuthProvider();
+      userCredential =
+          await FirebaseAuth.instance.signInWithPopup(provider);
+    } else {
+      // 📱 MOBILE
+      final GoogleSignInAccount googleUser =
+          await googleSignIn.authenticate();
+
+      final googleAuth = googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
+    }
+
+    final user = userCredential.user;
+
+    if (user != null) {
+      await saveFcmToken();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const PaginaInicio()),
+        (route) => false,
+      );
+    }
+
+  } catch (e) {
+    debugPrint("Error Google: $e");
+    _mostrarMensaje("Error al iniciar sesión con Google");
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
+  }
+  final user = FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+  final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+  final doc = await docRef.get();
+
+  if (!doc.exists) {
+    // 🔥 Separar nombre y apellidos (simple)
+    final parts = (user.displayName ?? "").split(" ");
+
+    final nombre = parts.isNotEmpty ? parts.first : "";
+    final apellidos = parts.length > 1 ? parts.sublist(1).join(" ") : "";
+
+    await docRef.set({
+      'nombre': nombre,
+      'apellidos': apellidos,
+      'telefono': '',
+      'email': user.email,
+      'createdAt': Timestamp.now(),
+    });
+  }
+}
+}
+
+
 
 
 
@@ -279,6 +381,11 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
+                const SizedBox(height: 10),
+
+      AnimatedGoogleButton(
+        onTap: loginWithGoogle,
+    ),
 
                 const SizedBox(height: 20),
 
@@ -352,6 +459,88 @@ class AnimatedTextField extends StatefulWidget {
   State<AnimatedTextField> createState() => _AnimatedTextFieldState();
 }
 
+class AnimatedGoogleButton extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const AnimatedGoogleButton({super.key, required this.onTap});
+
+  @override
+  State<AnimatedGoogleButton> createState() => _AnimatedGoogleButtonState();
+}
+
+class _AnimatedGoogleButtonState extends State<AnimatedGoogleButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) {
+        _setPressed(false);
+        widget.onTap();
+      },
+      onTapCancel: () => _setPressed(false),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        scale: _pressed ? 0.94 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          height: 55,
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: _pressed ? Colors.grey.shade200 : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: _pressed
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: _pressed ? 0.9 : 1.0,
+                duration: const Duration(milliseconds: 120),
+                child: Image.asset(
+                  'assets/images/google_logo.png',
+                  height: 24,
+                ),
+              ),
+              const SizedBox(width: 10),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 120),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: _pressed
+                      ? FontWeight.w700
+                      : FontWeight.w600,
+                ),
+                child: const Text('Continuar con Google'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _AnimatedTextFieldState extends State<AnimatedTextField> {
   final FocusNode _focusNode = FocusNode();
