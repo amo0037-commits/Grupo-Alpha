@@ -3,18 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gestion_cliente/screens/root_page.dart';
+
 import 'package:gestion_cliente/screens/inicio_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 
 import 'register_screen.dart';
 
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
+
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
@@ -38,8 +43,9 @@ void initState() {
 }
 
   Future<void> saveFcmToken() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
 
   final doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
 
@@ -57,10 +63,13 @@ void initState() {
   // pedir permisos (solo la primera vez)
   await messaging.requestPermission();
 
+
   // obtener token del dispositivo
   String? token = await messaging.getToken();
 
+
   debugPrint("FCM TOKEN: $token");
+
 
   if (token != null) {
     await FirebaseFirestore.instance
@@ -70,6 +79,7 @@ void initState() {
           'fcmToken': token,
         });
   }
+
 
   // si el token cambia en el futuro
   messaging.onTokenRefresh.listen((newToken) async {
@@ -160,8 +170,11 @@ if (user != null) {
 
 
 
+
+
   Future<void> login() async {
     setState(() => _isLoading = true);
+
 
     try {
       // 2. Intento de inicio de sesión
@@ -170,15 +183,17 @@ if (user != null) {
         password: passwordController.text.trim(),
       );
 
+
       // 3. Verificación de montaje
       if (!mounted) return;
+
 
       // 4. NAVEGACIÓN CRÍTICA:
       // Usamos pushAndRemoveUntil para limpiar la memoria de la pantalla de login
       // y evitar que el usuario pueda volver atrás al login con el botón del móvil.
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const PaginaInicio()),
-        (Route<dynamic> route) => false,
+        MaterialPageRoute(builder: (context) => const RootPage()),
+        (route) => false,
       );
     } on FirebaseAuthException catch (e) {
       String errorMsg = "Ocurrió un error";
@@ -200,6 +215,7 @@ if (user != null) {
     }
   }
 
+
   // Asegúrate de que el método se llame así o cámbialo en el catch
   void _mostrarMensaje(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -207,9 +223,11 @@ if (user != null) {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+
 
     return Container(
       decoration: const BoxDecoration(
@@ -219,7 +237,7 @@ if (user != null) {
           colors: [
             Color(0xFF1E293B),
             Color(0xFF334155),
-            Color(0xFF64B5F6), 
+            Color(0xFF64B5F6),
           ],
         ),
       ),
@@ -247,13 +265,16 @@ if (user != null) {
               children: [
                 const SizedBox(height: 40),
 
+
                 // LOGO
                 Image.asset(
                   'assets/images/LogoAlphaAppPagInicio.png',
                   width: 180,
                 ),
 
+
                 const SizedBox(height: 40),
+
 
                 _glassField(
                   AnimatedTextField(
@@ -263,7 +284,9 @@ if (user != null) {
                   ),
                 ),
 
+
                 const SizedBox(height: 20),
+
 
                 _glassField(
                   AnimatedTextField(
@@ -277,7 +300,9 @@ if (user != null) {
                   ),
                 ),
 
+
                 const SizedBox(height: 30),
+
 
                 // BOTÓN
                 GestureDetector(
@@ -364,6 +389,7 @@ if (user != null) {
 
                 const SizedBox(height: 20),
 
+
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -383,6 +409,7 @@ if (user != null) {
       ),
     );
   }
+
 
   // GLASS EFFECT
   Widget _glassField(Widget child) {
@@ -408,6 +435,7 @@ if (user != null) {
   }
 }
 
+
 // TEXTFIELD
 class AnimatedTextField extends StatefulWidget {
   final String label;
@@ -415,6 +443,7 @@ class AnimatedTextField extends StatefulWidget {
   final TextEditingController controller;
   final TextInputAction? textInputAction;
   final VoidCallback? onSubmitted;
+
 
   const AnimatedTextField({
     required this.label,
@@ -424,6 +453,7 @@ class AnimatedTextField extends StatefulWidget {
     this.onSubmitted,
     super.key,
   });
+
 
   @override
   State<AnimatedTextField> createState() => _AnimatedTextFieldState();
@@ -516,6 +546,7 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
   final FocusNode _focusNode = FocusNode();
   bool _hasFocus = false;
 
+
   @override
   void initState() {
     super.initState();
@@ -524,11 +555,13 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
     });
   }
 
+
   @override
   void dispose() {
     _focusNode.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -546,9 +579,11 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
         }
       },
 
+
       decoration: InputDecoration(
         hintStyle: TextStyle(color: _hasFocus ? Colors.white : Colors.white70),
         hintText: widget.label,
+
 
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(
