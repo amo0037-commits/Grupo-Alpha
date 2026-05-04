@@ -312,8 +312,8 @@ onTapCancel: () => setState(() {
                   color: const Color(0xFF93C5FD),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   child: ListTile(
-                    title: Text('${data['servicio']}'),
-                    subtitle: Text('${data['clase']}\n📅 ${DateFormat('dd/MM/yyyy').format((data['fecha'] as Timestamp).toDate())}\n⏰ ${data['hora']}'),
+                    title: Text('${data['negocioNombre']}'),
+                    subtitle: Text('${data['claseNombre']}\n📅 ${DateFormat('dd/MM/yyyy').format((data['fecha'] as Timestamp).toDate())}\n⏰ ${data['hora']}'),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _confirmarEliminacion(docId),
