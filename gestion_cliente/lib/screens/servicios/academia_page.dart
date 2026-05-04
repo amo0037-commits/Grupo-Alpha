@@ -136,102 +136,104 @@ class _AcademiaPageState extends State<AcademiaPage> {
     }
   }
 
-  Future<void> _reservar() async {
-    if (_selectedDay == null ||
-        _horaSeleccionada.isEmpty ||
-        _claseSeleccionada.isEmpty) {
-      _mostrarMensaje('Completa todos los campos');
+Future<void> _reservar() async {
+  if (_selectedDay == null ||
+      _horaSeleccionada.isEmpty ||
+      _claseSeleccionada.isEmpty) {
+    _mostrarMensaje('Completa todos los campos');
+    return;
+  }
+
+  final fechaBase = DateTime(
+    _selectedDay!.year,
+    _selectedDay!.month,
+    _selectedDay!.day,
+  );
+
+  final partesHora = _horaSeleccionada.split(':');
+
+  final fechaHora = DateTime(
+    fechaBase.year,
+    fechaBase.month,
+    fechaBase.day,
+    int.parse(partesHora[0]),
+    int.parse(partesHora[1]),
+  );
+
+  setState(() => _loading = true);
+
+  final reservasRef = _db.collection(_kColeccion);
+
+  try {
+  
+    final userQuery = await reservasRef
+    .where(_kCampoUserId, isEqualTo: widget.userId)
+    .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+    .where(_kCampoNegocioRef, isEqualTo: negocioRef)
+    .get();
+
+    if (userQuery.docs.length >= _kMaxReservas) {
+      _mostrarMensaje('Máximo $_kMaxReservas reservas activas');
       return;
     }
+    await _db.runTransaction((transaction) async {
 
-    final fechaBase = DateTime(
-      _selectedDay!.year,
-      _selectedDay!.month,
-      _selectedDay!.day,
-    );
+      final slotQuery = await reservasRef
+          .where(_kCampoNegocioRef, isEqualTo: negocioRef)
+          .where(_kCampoFecha, isEqualTo: Timestamp.fromDate(fechaBase))
+          .where(_kCampoHora, isEqualTo: _horaSeleccionada)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+          .get();
 
-    final partesHora = _horaSeleccionada.split(':');
+      if (slotQuery.docs.length >= _kMaxPorHora) {
+        throw Exception('Cupo completo para esta hora');
+      }
 
-    final fechaHora = DateTime(
-      fechaBase.year,
-      fechaBase.month,
-      fechaBase.day,
-      int.parse(partesHora[0]),
-      int.parse(partesHora[1]),
-    );
+      final yaReservado = slotQuery.docs.any(
+        (doc) => doc['userId'] == widget.userId,
+      );
 
-    setState(() => _loading = true);
+      if (yaReservado) {
+        throw Exception('Ya tienes una reserva en este horario');
+      }
 
-    try {
-      await _db.runTransaction((transaction) async {
-        final reservasRef = _db.collection(_kColeccion);
+      final docRef = reservasRef.doc();
 
-        final userQuery = await reservasRef
-            .where('userId', isEqualTo: widget.userId)
-            .where('estado', isEqualTo: 'activa')
-            .get();
-
-        if (userQuery.docs.length >= _kMaxReservas) {
-          throw Exception('Máximo $_kMaxReservas reservas activas');
-        }
-
-        final slotQuery = await reservasRef
-            .where(_kCampoNegocioRef, isEqualTo: negocioRef)
-            .where(_kCampoFecha, isEqualTo: Timestamp.fromDate(fechaBase))
-            .where(_kCampoHora, isEqualTo: _horaSeleccionada)
-            .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
-            .get();
-        if (slotQuery.docs.length >= _kMaxPorHora) {
-          throw Exception('Cupo completo para esta hora');
-        }
-
-        final yaReservado = slotQuery.docs.any(
-          (doc) => doc['userId'] == widget.userId,
-        );
-
-        if (yaReservado) {
-          throw Exception('Ya tienes una reserva en este horario');
-        }
-
-        final docRef = reservasRef.doc();
-
-        transaction.set(docRef, {
-          _kCampoUserId: widget.userId,
-
-          'negocioRef': negocioRef,
-          'negocioNombre': widget.negocio,
-
-          'claseNombre': _claseSeleccionada,
-
-          'claseRef': FirebaseFirestore.instance
-              .collection('clases')
-              .doc(_claseSeleccionada),
-
-          'fecha': Timestamp.fromDate(fechaBase),
-          'hora': _horaSeleccionada,
-          'fechaHora': Timestamp.fromDate(fechaHora),
-
-          'estado': 'activa',
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+      transaction.set(docRef, {
+        _kCampoUserId: widget.userId,
+        'negocioRef': negocioRef,
+        'negocioNombre': widget.negocio,
+        'claseNombre': _claseSeleccionada,
+        'claseRef': FirebaseFirestore.instance
+            .collection('clases')
+            .doc(_claseSeleccionada),
+        'fecha': Timestamp.fromDate(fechaBase),
+        'hora': _horaSeleccionada,
+        'fechaHora': Timestamp.fromDate(fechaHora),
+        'estado': 'activa',
+        'timestamp': FieldValue.serverTimestamp(),
       });
+    });
+    _mostrarMensaje('Reserva confirmada');
 
-      _mostrarMensaje('Reserva confirmada');
+    await _fetchBlockedDays();
 
-      await _fetchBlockedDays();
+    setState(() {
+      _selectedDay = null;
+      _horaSeleccionada = '';
+      _claseSeleccionada = '';
+      _horasDisponibles = List.from(horariosTotales);
+    });
 
-      setState(() {
-        _selectedDay = null;
-        _horaSeleccionada = '';
-        _claseSeleccionada = '';
-        _horasDisponibles = List.from(horariosTotales);
-      });
-    } catch (e) {
-      _mostrarMensaje(e.toString().replaceAll('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+  } catch (e, stack) {
+    debugPrint("ERROR REAL: $e");
+    debugPrintStack(stackTrace: stack);
+
+    _mostrarMensaje(e.toString().replaceAll('Exception: ', ''));
+  } finally {
+    if (mounted) setState(() => _loading = false);
   }
+}
 
   void _mostrarMensaje(String msg) =>
       ScaffoldMessenger.of(context).showSnackBar(
