@@ -49,6 +49,13 @@ class _LoginPageState extends State<LoginPage> {
           }
         }),
       );
+
+      if (response.statusCode == 200) {
+    debugPrint("Email enviado con éxito!");
+  } else {
+    debugPrint("EmailJS falló con código: ${response.statusCode}");
+    debugPrint("Respuesta: ${response.body}");
+  }
     } catch (e) {
       debugPrint("Error enviando email: $e");
     }
@@ -81,10 +88,10 @@ class _LoginPageState extends State<LoginPage> {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
           child: AlertDialog(
-            backgroundColor: const Color(0xFF1E293B).withOpacity(0.9),
+            backgroundColor: const Color(0xFF1E293B).withValues(alpha: 0.9),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.white.withOpacity(0.2)),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
             ),
             title: const Text("Verificación de Email", 
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
@@ -202,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         await _finalizarAcceso();
-      } on FirebaseAuthException catch (e) {
+      } on FirebaseAuthException {
         setState(() => _isLoading = false);
         _mostrarMensaje("Contraseña o datos incorrectos");
       }
@@ -288,7 +295,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blueAccent.withOpacity(_buttonPressed ? 0.2 : 0.35),
+                              color: Colors.blueAccent.withValues(alpha: _buttonPressed ? 0.2 : 0.35),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             ),
@@ -328,9 +335,9 @@ class _LoginPageState extends State<LoginPage> {
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: child,
             ),
