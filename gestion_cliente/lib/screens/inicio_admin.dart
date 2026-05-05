@@ -498,7 +498,7 @@ class _DetalleServicioScreenState extends State<_DetalleServicioScreen> {
                     style: const TextStyle(color: Colors.white60, fontSize: 12),
                   ),
                   value: _activo,
-                  activeColor: widget.color,
+                  activeThumbColor: widget.color,
                   onChanged: (v) => setState(() => _activo = v),
                 ),
               ),
