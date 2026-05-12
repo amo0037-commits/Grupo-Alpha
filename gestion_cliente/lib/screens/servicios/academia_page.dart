@@ -3,6 +3,17 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+const _kColeccion = 'reservas';
+const _kEstadoActiva = 'activa';
+const _kCampoFecha = 'fecha';
+const _kCampoHora = 'hora';
+const _kCampoEstado = 'estado';
+const _kCampoUserId = 'userId';
+const _kCampoNegocioRef = 'negocioRef';
+const _kCampoClase = 'claseNombre';
+const _kMaxReservas = 3;
+const _kMaxPorHora = 10;
+
 class AcademiaPage extends StatefulWidget {
   final String userId;
   final String negocio;
@@ -18,6 +29,10 @@ class _AcademiaPageState extends State<AcademiaPage> {
   DateTime? _selectedDay;
   List<DateTime> _blockedDays = [];
   List<String> _horasDisponibles = [];
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  DocumentReference get negocioRef =>
+      _db.collection('negocios').doc(widget.negocio);
 
   String _horaSeleccionada = '';
   String _claseSeleccionada = '';
@@ -34,163 +49,191 @@ class _AcademiaPageState extends State<AcademiaPage> {
     _horasDisponibles = List.from(horariosTotales);
   }
 
-  // Obtiene días que tienen alguna reserva para marcarlos en el calendario
   Future<void> _fetchBlockedDays() async {
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('reservas')
-          .where('servicio', isEqualTo: widget.negocio)
-          .where('estado', isEqualTo: 'activa')
-          .get();
+      final inicio = DateTime(_focusedDay.year, _focusedDay.month, 1);
+      final fin = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
 
-      List<DateTime> blocked = [];
+      final snapshot = await _db
+          .collection(_kColeccion)
+          .where(_kCampoNegocioRef, isEqualTo: negocioRef)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+          .where(
+            _kCampoFecha,
+            isGreaterThanOrEqualTo: Timestamp.fromDate(inicio),
+          )
+          .where(_kCampoFecha, isLessThanOrEqualTo: Timestamp.fromDate(fin))
+          .get();
+      final Set<DateTime> blocked = {};
+
       for (var doc in snapshot.docs) {
-        DateTime fecha = (doc['fecha'] as Timestamp).toDate();
+        final fecha = (doc['fecha'] as Timestamp).toDate();
+
         blocked.add(DateTime(fecha.year, fecha.month, fecha.day));
       }
-      if (mounted)
+
+      if (mounted) {
         setState(() {
-          _blockedDays = blocked;
+          _blockedDays = blocked.toList();
         });
+      }
     } catch (e) {
-      debugPrint("Error obteniendo días: $e");
+      debugPrint("Error días bloqueados: $e");
     }
   }
 
-  // Lógica principal: Filtra por aforo (10) y por reserva previa del usuario
   Future<void> _actualizarHorasDisponibles() async {
     if (_selectedDay == null || _claseSeleccionada.isEmpty) return;
-    setState(() {
-      _loading = true;
-    });
 
-    DateTime fechaBusqueda = DateTime(
-      _selectedDay!.year,
-      _selectedDay!.month,
-      _selectedDay!.day,
-    );
+    setState(() => _loading = true);
 
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('reservas')
-          .where('servicio', isEqualTo: widget.negocio)
-          .where('fecha', isEqualTo: Timestamp.fromDate(fechaBusqueda))
-          .where('clase', isEqualTo: _claseSeleccionada)
-          .where('estado', isEqualTo: 'activa')
+      final fechaBusqueda = DateTime(
+        _selectedDay!.year,
+        _selectedDay!.month,
+        _selectedDay!.day,
+      );
+
+      final snapshot = await _db
+          .collection(_kColeccion)
+          .where(_kCampoNegocioRef, isEqualTo: negocioRef)
+          .where(_kCampoFecha, isEqualTo: Timestamp.fromDate(fechaBusqueda))
+          .where(_kCampoClase, isEqualTo: _claseSeleccionada)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
           .get();
 
-      // 1. Mapa para contar aforo global
-      Map<String, int> conteoGlobal = {};
-      // 2. Lista para saber dónde ya reservó este usuario
-      List<String> misHoras = [];
+      final Map<String, int> conteoPorHora = {};
+      final Set<String> misHoras = {};
 
       for (var doc in snapshot.docs) {
-        String hora = doc['hora'] as String;
-        String uid = doc['userId'] as String;
+        final hora = doc[_kCampoHora] as String;
+        final userId = doc[_kCampoUserId] as String;
 
-        conteoGlobal[hora] = (conteoGlobal[hora] ?? 0) + 1;
-        if (uid == widget.userId) {
+        conteoPorHora[hora] = (conteoPorHora[hora] ?? 0) + 1;
+
+        if (userId == widget.userId) {
           misHoras.add(hora);
         }
       }
 
       setState(() {
         _horasDisponibles = horariosTotales.where((h) {
-          int total = conteoGlobal[h] ?? 0;
-          bool yoYaReserve = misHoras.contains(h);
+          final total = conteoPorHora[h] ?? 0;
+          final yaReservado = misHoras.contains(h);
 
-          // Disponible si: hay menos de 10 personas Y yo no estoy en esa lista
-          return total < 10 && !yoYaReserve;
+          return total < _kMaxPorHora && !yaReservado;
         }).toList();
 
-        if (!_horasDisponibles.contains(_horaSeleccionada))
+        if (!_horasDisponibles.contains(_horaSeleccionada)) {
           _horaSeleccionada = '';
+        }
+
         _loading = false;
       });
     } catch (e) {
-      debugPrint("Error: $e");
-      setState(() {
-        _loading = false;
-      });
+      debugPrint("Error horas disponibles: $e");
+      setState(() => _loading = false);
     }
   }
 
-  Future<void> _reservar() async {
-    if (_selectedDay == null ||
-        _horaSeleccionada.isEmpty ||
-        _claseSeleccionada.isEmpty) {
-      _mostrarMensaje('Completa todos los campos');
+Future<void> _reservar() async {
+  if (_selectedDay == null ||
+      _horaSeleccionada.isEmpty ||
+      _claseSeleccionada.isEmpty) {
+    _mostrarMensaje('Completa todos los campos');
+    return;
+  }
+
+  final fechaBase = DateTime(
+    _selectedDay!.year,
+    _selectedDay!.month,
+    _selectedDay!.day,
+  );
+
+  final partesHora = _horaSeleccionada.split(':');
+
+  final fechaHora = DateTime(
+    fechaBase.year,
+    fechaBase.month,
+    fechaBase.day,
+    int.parse(partesHora[0]),
+    int.parse(partesHora[1]),
+  );
+
+  setState(() => _loading = true);
+
+  final reservasRef = _db.collection(_kColeccion);
+
+  try {
+  
+    final userQuery = await reservasRef
+    .where(_kCampoUserId, isEqualTo: widget.userId)
+    .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
+    .where(_kCampoNegocioRef, isEqualTo: negocioRef)
+    .get();
+
+    if (userQuery.docs.length >= _kMaxReservas) {
+      _mostrarMensaje('Máximo $_kMaxReservas reservas activas');
       return;
     }
+    await _db.runTransaction((transaction) async {
 
-    setState(() {
-      _loading = true;
-    });
-
-    try {
-      DateTime fechaBusqueda = DateTime(
-        _selectedDay!.year,
-        _selectedDay!.month,
-        _selectedDay!.day,
-      );
-
-      // Verificación de seguridad de último segundo (Cupo y duplicado)
-      final snapshotCheck = await FirebaseFirestore.instance
-          .collection('reservas')
-          .where('servicio', isEqualTo: widget.negocio)
-          .where('fecha', isEqualTo: Timestamp.fromDate(fechaBusqueda))
-          .where('clase', isEqualTo: _claseSeleccionada)
-          .where('hora', isEqualTo: _horaSeleccionada)
-          .where('estado', isEqualTo: 'activa')
+      final slotQuery = await reservasRef
+          .where(_kCampoNegocioRef, isEqualTo: negocioRef)
+          .where(_kCampoFecha, isEqualTo: Timestamp.fromDate(fechaBase))
+          .where(_kCampoHora, isEqualTo: _horaSeleccionada)
+          .where(_kCampoEstado, isEqualTo: _kEstadoActiva)
           .get();
 
-      // Chequear si el usuario ya está ahí (por si acaso)
-      bool yaEstoyInscrito = snapshotCheck.docs.any(
+      if (slotQuery.docs.length >= _kMaxPorHora) {
+        throw Exception('Cupo completo para esta hora');
+      }
+
+      final yaReservado = slotQuery.docs.any(
         (doc) => doc['userId'] == widget.userId,
       );
 
-      if (yaEstoyInscrito) {
-        // Esto no debería pasar porque ya filtramos, pero por seguridad lo volvemos a revisar antes de reservar
-        _mostrarMensaje('Ya tienes una reserva para esta clase y hora.');
-        _actualizarHorasDisponibles();
-        return;
+      if (yaReservado) {
+        throw Exception('Ya tienes una reserva en este horario');
       }
 
-      if (snapshotCheck.docs.length >= 10) {
-        // Aforo máximo
-        _mostrarMensaje('¡Lo sentimos! El cupo se acaba de llenar.');
-        _actualizarHorasDisponibles();
-        return;
-      }
+      final docRef = reservasRef.doc();
 
-      // Si todo OK, guardamos
-      await FirebaseFirestore.instance.collection('reservas').add({
-        'userId': widget.userId,
-        'servicio': widget.negocio,
-        'fecha': fechaBusqueda,
+      transaction.set(docRef, {
+        _kCampoUserId: widget.userId,
+        'negocioRef': negocioRef,
+        'negocioNombre': widget.negocio,
+        'claseNombre': _claseSeleccionada,
+        'claseRef': FirebaseFirestore.instance
+            .collection('clases')
+            .doc(_claseSeleccionada),
+        'fecha': Timestamp.fromDate(fechaBase),
         'hora': _horaSeleccionada,
-        'clase': _claseSeleccionada,
+        'fechaHora': Timestamp.fromDate(fechaHora),
         'estado': 'activa',
         'timestamp': FieldValue.serverTimestamp(),
       });
+    });
+    _mostrarMensaje('Reserva confirmada');
 
-      _mostrarMensaje('¡Reserva confirmada!');
-      _fetchBlockedDays();
-      setState(() {
-        _selectedDay = null;
-        _horaSeleccionada = '';
-        _claseSeleccionada = '';
-        _horasDisponibles = List.from(horariosTotales);
-      });
-    } catch (e) {
-      _mostrarMensaje('Error al reservar: $e');
-    } finally {
-      if (mounted)
-        setState(() {
-          _loading = false;
-        });
-    }
+    await _fetchBlockedDays();
+
+    setState(() {
+      _selectedDay = null;
+      _horaSeleccionada = '';
+      _claseSeleccionada = '';
+      _horasDisponibles = List.from(horariosTotales);
+    });
+
+  } catch (e, stack) {
+    debugPrint("ERROR REAL: $e");
+    debugPrintStack(stackTrace: stack);
+
+    _mostrarMensaje(e.toString().replaceAll('Exception: ', ''));
+  } finally {
+    if (mounted) setState(() => _loading = false);
   }
+}
 
   void _mostrarMensaje(String msg) =>
       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,8 +260,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-
-        // opcional pero recomendado para que el gradiente del fondo no “choque”
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -235,9 +276,7 @@ class _AcademiaPageState extends State<AcademiaPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [  Color(0xFFF5F5F5),
-  Color(0xFFFFB74D), 
-  Color(0xFFF57C00), ],
+            colors: [Color(0xFFF5F5F5), Color(0xFFFFB74D), Color(0xFFF57C00)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -259,17 +298,16 @@ class _AcademiaPageState extends State<AcademiaPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // CALENDARIO
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -290,7 +328,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
                           });
                           _actualizarHorasDisponibles();
                         },
-
                         headerStyle: const HeaderStyle(
                           formatButtonVisible: false,
                           titleCentered: true,
@@ -309,12 +346,10 @@ class _AcademiaPageState extends State<AcademiaPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         calendarStyle: const CalendarStyle(
                           defaultTextStyle: TextStyle(
                             color: Color.fromARGB(255, 0, 0, 0),
                           ),
-
                           selectedDecoration: BoxDecoration(
                             color: Colors.blueAccent,
                             shape: BoxShape.circle,
@@ -347,17 +382,16 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 30),
 
-                    
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -367,23 +401,19 @@ class _AcademiaPageState extends State<AcademiaPage> {
                         horizontal: 16,
                         vertical: 14,
                       ),
-
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
                         alignment: AlignmentDirectional.center,
-
-                        value: _claseSeleccionada.isEmpty
+                        initialValue: _claseSeleccionada.isEmpty
                             ? null
                             : _claseSeleccionada,
                         decoration: const InputDecoration(
                           labelText: 'Selecciona Materia',
                           labelStyle: TextStyle(color: Colors.black87),
                           floatingLabelStyle: TextStyle(color: Colors.black),
-
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -402,16 +432,13 @@ class _AcademiaPageState extends State<AcademiaPage> {
                           Icons.arrow_drop_down,
                           color: Colors.black,
                         ),
-
-                        dropdownColor: Colors.white.withOpacity(0.95),
-
+                        dropdownColor: Colors.white.withValues(alpha: 0.95),
                         items: clases.map((c) {
                           return DropdownMenuItem(
                             value: c,
                             child: Center(child: Text(c)),
                           );
                         }).toList(),
-
                         onChanged: (val) {
                           setState(() => _claseSeleccionada = val!);
                           _actualizarHorasDisponibles();
@@ -421,52 +448,42 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 15),
 
-                    
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
                         alignment: AlignmentDirectional.center,
-
-                        value: _horaSeleccionada.isEmpty
+                        initialValue: _horaSeleccionada.isEmpty
                             ? null
                             : _horaSeleccionada,
-
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Hora disponible',
-                          labelStyle: const TextStyle(color: Colors.black87),
-                          floatingLabelStyle: const TextStyle(
-                            color: Colors.black,
-                          ),
-
+                          labelStyle: TextStyle(color: Colors.black87),
+                          floatingLabelStyle: TextStyle(color: Colors.black),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-
-                          
                           isCollapsed: true,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
-
                         icon: const Icon(
                           Icons.arrow_drop_down,
                           color: Colors.black,
@@ -482,16 +499,13 @@ class _AcademiaPageState extends State<AcademiaPage> {
                             );
                           }).toList();
                         },
-
-                        dropdownColor: Colors.white.withOpacity(0.95),
-
+                        dropdownColor: Colors.white.withValues(alpha: 0.95),
                         items: _horasDisponibles.map((h) {
                           return DropdownMenuItem(
                             value: h,
                             child: Center(child: Text(h)),
                           );
                         }).toList(),
-
                         onChanged: _selectedDay == null
                             ? null
                             : (val) => setState(() => _horaSeleccionada = val!),
@@ -500,7 +514,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
 
                     const SizedBox(height: 35),
 
-                    
                     SizedBox(
                       width: screenWidth * 0.7,
                       height: 55,
@@ -518,7 +531,11 @@ class _AcademiaPageState extends State<AcademiaPage> {
                         child: Ink(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF64B5F6)],
+                              colors: [
+                                Color(0xFF1E293B),
+                                Color(0xFF334155),
+                                Color(0xFF64B5F6),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -551,20 +568,6 @@ class _AcademiaPageState extends State<AcademiaPage> {
           ),
         ),
       ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      floatingLabelAlignment: FloatingLabelAlignment.center,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
     );
   }
 }

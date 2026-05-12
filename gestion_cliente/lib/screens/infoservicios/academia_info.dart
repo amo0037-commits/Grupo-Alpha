@@ -13,7 +13,9 @@ class _AcademiaInfoState extends State<AcademiaInfo>
   final Color neonOrange = const Color(0xFFFFA726);
 
   late AnimationController _controller;
+  // ignore: unused_field
   late Animation<double> _fadeAnimation;
+  // ignore: unused_field
   late Animation<double> _scaleAnimation;
 
   final List<Map<String, String>> clases = [
@@ -107,7 +109,7 @@ class _AcademiaInfoState extends State<AcademiaInfo>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     blurRadius: 25,
                   ),
                 ],
@@ -207,7 +209,7 @@ class _AcademiaInfoState extends State<AcademiaInfo>
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.75),
+                                  Colors.black.withValues(alpha: 0.75),
                                   Colors.transparent,
                                 ],
                               ),
@@ -251,7 +253,7 @@ class _AcademiaInfoState extends State<AcademiaInfo>
                                       decoration: BoxDecoration(
                                         boxShadow: [
                                           BoxShadow(
-                                            color: neonOrange.withOpacity(0.25),
+                                            color: neonOrange.withValues(alpha: 0.25),
                                             blurRadius: 18,
                                             spreadRadius: 1,
                                           ),
@@ -286,7 +288,7 @@ class _AcademiaInfoState extends State<AcademiaInfo>
                       "Además, contamos con tutorías individualizadas, donde el alumno recibe atención directa para resolver dudas, mejorar su organización y optimizar su método de estudio.\n\n"
                       "Nuestro objetivo es no solo mejorar las calificaciones, sino también enseñar a aprender de forma autónoma, eficiente y duradera.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 15,
                         height: 1.5,
                       ),
